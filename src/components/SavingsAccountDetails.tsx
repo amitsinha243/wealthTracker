@@ -1,30 +1,21 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2 } from "lucide-react";
+import { SavingsAccount } from "@/hooks/useAssets";
 
-interface BankAccount {
-  bank: string;
-  accountNumber: string;
-  balance: number;
-  type: string;
+interface SavingsAccountDetailsProps {
+  accounts: SavingsAccount[];
 }
 
-const accounts: BankAccount[] = [
-  {
-    bank: "HDFC Bank",
-    accountNumber: "****6789",
-    balance: 85000,
-    type: "Savings"
-  },
-  {
-    bank: "SBI",
-    accountNumber: "****4321",
-    balance: 65000,
-    type: "Savings"
+export const SavingsAccountDetails = ({ accounts }: SavingsAccountDetailsProps) => {
+  if (accounts.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No savings accounts added yet. Click "Add Savings Account" to get started.
+      </div>
+    );
   }
-];
 
-export const SavingsAccountDetails = () => {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
   return (
@@ -40,9 +31,9 @@ export const SavingsAccountDetails = () => {
       </div>
 
       <div className="space-y-3">
-        {accounts.map((account, index) => (
+        {accounts.map((account) => (
           <Card 
-            key={index}
+            key={account.id}
             className="p-4 hover:shadow-md transition-all duration-300 border-border/50 bg-gradient-to-br from-card to-secondary/20"
           >
             <div className="flex items-start justify-between">
@@ -56,7 +47,7 @@ export const SavingsAccountDetails = () => {
                     A/c: {account.accountNumber}
                   </p>
                   <Badge variant="secondary" className="mt-2">
-                    {account.type}
+                    {account.interestRate}% interest
                   </Badge>
                 </div>
               </div>
