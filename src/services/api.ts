@@ -1,6 +1,6 @@
 import { API_BASE_URL, getAuthHeaders } from '@/config/api';
 
-// Auth API
+// -------------------- Auth API --------------------
 export const authAPI = {
   signup: async (email: string, password: string, name: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
@@ -23,10 +23,11 @@ export const authAPI = {
   }
 };
 
-// Savings Account API
+// -------------------- Savings Account API --------------------
 export const savingsAccountAPI = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/savings-accounts`, {
+      method: 'GET',
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to fetch savings accounts');
@@ -44,10 +45,11 @@ export const savingsAccountAPI = {
   }
 };
 
-// Mutual Fund API
+// -------------------- Mutual Fund API --------------------
 export const mutualFundAPI = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/mutual-funds`, {
+      method: 'GET',
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to fetch mutual funds');
@@ -65,10 +67,11 @@ export const mutualFundAPI = {
   }
 };
 
-// Fixed Deposit API
+// -------------------- Fixed Deposit API --------------------
 export const fixedDepositAPI = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/fixed-deposits`, {
+      method: 'GET',
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to fetch fixed deposits');
@@ -76,20 +79,31 @@ export const fixedDepositAPI = {
   },
 
   create: async (data: any) => {
+    // Ensure maturityDate is in ISO string format
+    const payload = {
+      ...data,
+      maturityDate: data.maturityDate instanceof Date
+        ? data.maturityDate.toISOString()    // e.g. "2025-10-25T00:00:00.000Z"
+        : data.maturityDate
+    };
+
     const response = await fetch(`${API_BASE_URL}/fixed-deposits`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(data)
+      body: JSON.stringify(payload)
     });
+
     if (!response.ok) throw new Error('Failed to create fixed deposit');
     return response.json();
   }
 };
 
-// Expense API
+
+// -------------------- Expense API --------------------
 export const expenseAPI = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/expenses`, {
+      method: 'GET',
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to fetch expenses');

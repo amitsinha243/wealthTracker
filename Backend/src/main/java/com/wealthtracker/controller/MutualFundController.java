@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class MutualFundController {
     public ResponseEntity<MutualFund> create(@RequestBody MutualFund fund, Authentication auth) {
         String userId = (String) auth.getPrincipal();
         fund.setUserId(userId);
-        fund.setUpdatedAt(LocalDateTime.now());
+        fund.setUpdatedAt(LocalDate.now());
         return ResponseEntity.ok(mutualFundRepository.save(fund));
     }
 }

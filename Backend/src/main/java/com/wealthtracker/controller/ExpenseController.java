@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,9 +19,10 @@ public class ExpenseController {
     public ExpenseController(ExpenseRepository expenseRepository) {
         this.expenseRepository = expenseRepository;
     }
-    
+
     @GetMapping
     public ResponseEntity<List<Expense>> getAll(Authentication auth) {
+        System.out.println("Authenticated user: " + auth.getPrincipal());
         String userId = (String) auth.getPrincipal();
         return ResponseEntity.ok(expenseRepository.findByUserId(userId));
     }
@@ -29,7 +31,7 @@ public class ExpenseController {
     public ResponseEntity<Expense> create(@RequestBody Expense expense, Authentication auth) {
         String userId = (String) auth.getPrincipal();
         expense.setUserId(userId);
-        expense.setUpdatedAt(LocalDateTime.now());
+        expense.setUpdatedAt(LocalDate.now());
         return ResponseEntity.ok(expenseRepository.save(expense));
     }
     

@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -11,18 +12,18 @@ import java.time.LocalDateTime;
 public class Expense {
     @Id
     private String id;
-    
+
     private String userId;
     private String category;
     private Double amount;
-    private LocalDateTime date;
+    private LocalDate date; // Changed from LocalDateTime to LocalDate
     private String description;
-    
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    
+
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
+
     public Expense() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDate.now();
+        this.updatedAt = LocalDate.now();
     }
 }

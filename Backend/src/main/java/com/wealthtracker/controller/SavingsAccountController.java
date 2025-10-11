@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -29,7 +29,7 @@ public class SavingsAccountController {
     public ResponseEntity<SavingsAccount> create(@RequestBody SavingsAccount account, Authentication auth) {
         String userId = (String) auth.getPrincipal();
         account.setUserId(userId);
-        account.setUpdatedAt(LocalDateTime.now());
+        account.setUpdatedAt(LocalDate.now());
         return ResponseEntity.ok(savingsAccountRepository.save(account));
     }
 }

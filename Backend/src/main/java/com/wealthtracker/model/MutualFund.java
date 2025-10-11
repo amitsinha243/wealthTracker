@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,13 +18,13 @@ public class MutualFund {
     private String schemeName;
     private Double units;
     private Double nav;
-    private LocalDateTime purchaseDate;
+    private LocalDate purchaseDate;
     
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
     
     public MutualFund() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDate.now();
+        this.updatedAt = LocalDate.now();
     }
 }

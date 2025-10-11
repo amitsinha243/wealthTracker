@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,8 +29,11 @@ public class FixedDepositController {
     @PostMapping
     public ResponseEntity<FixedDeposit> create(@RequestBody FixedDeposit deposit, Authentication auth) {
         String userId = (String) auth.getPrincipal();
+        System.out.println("UserID -> "+userId);
         deposit.setUserId(userId);
-        deposit.setUpdatedAt(LocalDateTime.now());
+
+        deposit.setUpdatedAt(LocalDate.now());
+        System.out.println("Deposit -> "+deposit);
         return ResponseEntity.ok(fixedDepositRepository.save(deposit));
     }
 }
