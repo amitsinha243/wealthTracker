@@ -8,6 +8,8 @@ export interface SavingsAccount {
   accountNumber: string;
   balance: number;
   interestRate: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MutualFund {
@@ -17,6 +19,8 @@ export interface MutualFund {
   units: number;
   nav: number;
   purchaseDate: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface FixedDeposit {
@@ -25,6 +29,8 @@ export interface FixedDeposit {
   amount: number;
   interestRate: number;
   maturityDate: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const useAssets = () => {
