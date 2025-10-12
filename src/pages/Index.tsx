@@ -90,7 +90,6 @@ const Index = () => {
                 title="Fixed Deposits"
                 amount={totalFixedDeposits}
                 icon={Landmark}
-                change={5.2}
                 description={`${fixedDeposits.length} deposit${fixedDeposits.length !== 1 ? 's' : ''}`}
                 onViewDetails={() => setSelectedAsset('fixeddeposits')}
               />
@@ -108,7 +107,6 @@ const Index = () => {
                 title="Mutual Funds"
                 amount={totalMutualFunds}
                 icon={TrendingUp}
-                change={12.8}
                 description={`${mutualFunds.length} fund${mutualFunds.length !== 1 ? 's' : ''}`}
                 onViewDetails={() => setSelectedAsset('mutualfunds')}
               />
@@ -126,7 +124,6 @@ const Index = () => {
                 title="Savings Account"
                 amount={totalSavings}
                 icon={PiggyBank}
-                change={8.5}
                 description={`${savingsAccounts.length} account${savingsAccounts.length !== 1 ? 's' : ''}`}
                 onViewDetails={() => setSelectedAsset('savings')}
               />
