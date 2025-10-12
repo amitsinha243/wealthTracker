@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { savingsAccountAPI, mutualFundAPI, fixedDepositAPI } from '@/services/api';
+import { savingsAccountAPI, mutualFundAPI, fixedDepositAPI, stockAPI } from '@/services/api';
 
 export interface SavingsAccount {
   id: string;
@@ -33,11 +33,23 @@ export interface FixedDeposit {
   updatedAt?: string;
 }
 
+export interface Stock {
+  id: string;
+  stockName: string;
+  symbol: string;
+  quantity: number;
+  purchasePrice: number;
+  purchaseDate: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export const useAssets = () => {
   const { user } = useAuth();
   const [savingsAccounts, setSavingsAccounts] = useState<SavingsAccount[]>([]);
   const [mutualFunds, setMutualFunds] = useState<MutualFund[]>([]);
   const [fixedDeposits, setFixedDeposits] = useState<FixedDeposit[]>([]);
+  const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchAssets = async () => {
@@ -45,15 +57,17 @@ export const useAssets = () => {
     
     setLoading(true);
     try {
-      const [savings, funds, deposits] = await Promise.all([
+      const [savings, funds, deposits, stocksData] = await Promise.all([
         savingsAccountAPI.getAll(),
         mutualFundAPI.getAll(),
-        fixedDepositAPI.getAll()
+        fixedDepositAPI.getAll(),
+        stockAPI.getAll()
       ]);
       
       setSavingsAccounts(savings);
       setMutualFunds(funds);
       setFixedDeposits(deposits);
+      setStocks(stocksData);
     } catch (error) {
       console.error('Error fetching assets:', error);
     } finally {
@@ -98,13 +112,26 @@ export const useAssets = () => {
     }
   };
 
+  const addStock = async (stock: Omit<Stock, 'id'>) => {
+    if (!user) return;
+    
+    try {
+      await stockAPI.create(stock);
+      await fetchAssets();
+    } catch (error) {
+      console.error('Error adding stock:', error);
+    }
+  };
+
   return {
     savingsAccounts,
     mutualFunds,
     fixedDeposits,
+    stocks,
     loading,
     addSavingsAccount,
     addMutualFund,
-    addFixedDeposit
+    addFixedDeposit,
+    addStock
   };
 };

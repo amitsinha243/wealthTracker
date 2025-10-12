@@ -9,11 +9,11 @@ import { toast } from 'sonner';
 interface AddAssetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  type: 'savings' | 'mutual-fund' | 'fixed-deposit';
+  type: 'savings' | 'mutual-fund' | 'fixed-deposit' | 'stock';
 }
 
 export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps) => {
-  const { addSavingsAccount, addMutualFund, addFixedDeposit } = useAssets();
+  const { addSavingsAccount, addMutualFund, addFixedDeposit, addStock } = useAssets();
   const [formData, setFormData] = useState<any>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,6 +40,14 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
         amount: parseFloat(formData.amount),
         interestRate: parseFloat(formData.interestRate),
         maturityDate: formData.maturityDate
+      });
+    } else if (type === 'stock') {
+      addStock({
+        stockName: formData.stockName,
+        symbol: formData.symbol,
+        quantity: parseFloat(formData.quantity),
+        purchasePrice: parseFloat(formData.purchasePrice),
+        purchaseDate: formData.purchaseDate
       });
     }
 
@@ -95,7 +103,7 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
           </div>
         </>
       );
-    } else {
+    } else if (type === 'fixed-deposit') {
       return (
         <>
           <div className="space-y-2">
@@ -116,12 +124,38 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
           </div>
         </>
       );
+    } else {
+      return (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="stockName">Stock Name</Label>
+            <Input id="stockName" value={formData.stockName || ''} onChange={(e) => setFormData({ ...formData, stockName: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="symbol">Symbol</Label>
+            <Input id="symbol" value={formData.symbol || ''} onChange={(e) => setFormData({ ...formData, symbol: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="quantity">Quantity</Label>
+            <Input id="quantity" type="number" step="0.001" value={formData.quantity || ''} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="purchasePrice">Purchase Price (₹)</Label>
+            <Input id="purchasePrice" type="number" step="0.01" value={formData.purchasePrice || ''} onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="purchaseDate">Purchase Date</Label>
+            <Input id="purchaseDate" type="date" value={formData.purchaseDate || ''} onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })} required />
+          </div>
+        </>
+      );
     }
   };
 
   const getTitle = () => {
     if (type === 'savings') return 'Add Savings Account';
     if (type === 'mutual-fund') return 'Add Mutual Fund';
+    if (type === 'stock') return 'Add Stock';
     return 'Add Fixed Deposit';
   };
 

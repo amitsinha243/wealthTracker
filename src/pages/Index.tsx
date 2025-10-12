@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wallet, TrendingUp, PiggyBank, Landmark, Plus, LogOut, Receipt, LayoutGrid, FileText } from "lucide-react";
+import { Wallet, TrendingUp, PiggyBank, Landmark, Plus, LogOut, Receipt, LayoutGrid, FileText, TrendingDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAssets } from "@/hooks/useAssets";
 import { AssetCard } from "@/components/AssetCard";
@@ -11,17 +11,18 @@ import { Button } from "@/components/ui/button";
 import { SavingsAccountDetails } from "@/components/SavingsAccountDetails";
 import { MutualFundDetails } from "@/components/MutualFundDetails";
 import { FixedDepositDetails } from "@/components/FixedDepositDetails";
+import { StockDetails } from "@/components/StockDetails";
 import { AddAssetDialog } from "@/components/AddAssetDialog";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 
-type AssetType = 'savings' | 'mutualfunds' | 'fixeddeposits' | null;
+type AssetType = 'savings' | 'mutualfunds' | 'fixeddeposits' | 'stocks' | null;
 
 const Index = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { savingsAccounts, mutualFunds, fixedDeposits } = useAssets();
+  const { savingsAccounts, mutualFunds, fixedDeposits, stocks } = useAssets();
   const [selectedAsset, setSelectedAsset] = useState<AssetType>(null);
-  const [addAssetType, setAddAssetType] = useState<'savings' | 'mutual-fund' | 'fixed-deposit' | null>(null);
+  const [addAssetType, setAddAssetType] = useState<'savings' | 'mutual-fund' | 'fixed-deposit' | 'stock' | null>(null);
   const [showAddExpense, setShowAddExpense] = useState(false);
 
   useEffect(() => {
@@ -35,7 +36,40 @@ const Index = () => {
   const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalMutualFunds = mutualFunds.reduce((sum, fund) => sum + (fund.units * fund.nav), 0);
   const totalFixedDeposits = fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0);
-  const totalAssets = totalSavings + totalMutualFunds + totalFixedDeposits;
+  const totalStocks = stocks.reduce((sum, stock) => sum + (stock.quantity * stock.purchasePrice), 0);
+  const totalAssets = totalSavings + totalMutualFunds + totalFixedDeposits + totalStocks;
+
+  // Calculate monthly additions (current month)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  const getMonthlyAddition = (assets: any[], amountKey?: string) => {
+    return assets
+      .filter(asset => {
+        if (!asset.createdAt) return false;
+        const createdDate = new Date(asset.createdAt);
+        return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
+      })
+      .reduce((sum, asset) => {
+        if (amountKey) {
+          return sum + (asset[amountKey] || 0);
+        }
+        // For mutual funds
+        if (asset.units && asset.nav) {
+          return sum + (asset.units * asset.nav);
+        }
+        // For stocks
+        if (asset.quantity && asset.purchasePrice) {
+          return sum + (asset.quantity * asset.purchasePrice);
+        }
+        return sum;
+      }, 0);
+  };
+
+  const monthlyFixedDeposits = getMonthlyAddition(fixedDeposits, 'amount');
+  const monthlyMutualFunds = getMonthlyAddition(mutualFunds);
+  const monthlySavings = getMonthlyAddition(savingsAccounts, 'balance');
+  const monthlyStocks = getMonthlyAddition(stocks);
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,13 +118,13 @@ const Index = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Your Assets</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="space-y-4">
               <AssetCard
                 title="Fixed Deposits"
                 amount={totalFixedDeposits}
                 icon={Landmark}
-                description={`${fixedDeposits.length} deposit${fixedDeposits.length !== 1 ? 's' : ''}`}
+                description={`${fixedDeposits.length} deposit${fixedDeposits.length !== 1 ? 's' : ''} • This month: ₹${monthlyFixedDeposits.toLocaleString('en-IN')}`}
                 onViewDetails={() => setSelectedAsset('fixeddeposits')}
               />
               <Button 
@@ -107,7 +141,7 @@ const Index = () => {
                 title="Mutual Funds"
                 amount={totalMutualFunds}
                 icon={TrendingUp}
-                description={`${mutualFunds.length} fund${mutualFunds.length !== 1 ? 's' : ''}`}
+                description={`${mutualFunds.length} fund${mutualFunds.length !== 1 ? 's' : ''} • This month: ₹${monthlyMutualFunds.toLocaleString('en-IN')}`}
                 onViewDetails={() => setSelectedAsset('mutualfunds')}
               />
               <Button 
@@ -124,7 +158,7 @@ const Index = () => {
                 title="Savings Account"
                 amount={totalSavings}
                 icon={PiggyBank}
-                description={`${savingsAccounts.length} account${savingsAccounts.length !== 1 ? 's' : ''}`}
+                description={`${savingsAccounts.length} account${savingsAccounts.length !== 1 ? 's' : ''} • This month: ₹${monthlySavings.toLocaleString('en-IN')}`}
                 onViewDetails={() => setSelectedAsset('savings')}
               />
               <Button 
@@ -134,6 +168,23 @@ const Index = () => {
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Savings Account
+              </Button>
+            </div>
+            <div className="space-y-4">
+              <AssetCard
+                title="Stocks"
+                amount={totalStocks}
+                icon={TrendingDown}
+                description={`${stocks.length} stock${stocks.length !== 1 ? 's' : ''} • This month: ₹${monthlyStocks.toLocaleString('en-IN')}`}
+                onViewDetails={() => setSelectedAsset('stocks')}
+              />
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => setAddAssetType('stock')}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Stock
               </Button>
             </div>
           </div>
@@ -164,6 +215,7 @@ const Index = () => {
           {selectedAsset === 'savings' && <SavingsAccountDetails accounts={savingsAccounts} />}
           {selectedAsset === 'mutualfunds' && <MutualFundDetails funds={mutualFunds} />}
           {selectedAsset === 'fixeddeposits' && <FixedDepositDetails deposits={fixedDeposits} />}
+          {selectedAsset === 'stocks' && <StockDetails stocks={stocks} />}
         </DialogContent>
       </Dialog>
 

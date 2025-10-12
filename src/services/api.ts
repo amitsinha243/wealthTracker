@@ -71,29 +71,52 @@ export const mutualFundAPI = {
 export const fixedDepositAPI = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/fixed-deposits`, {
-      method: 'GET',
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to fetch fixed deposits');
     return response.json();
   },
-
+  
   create: async (data: any) => {
-    // Ensure maturityDate is in ISO string format
-    const payload = {
+    // Ensure maturityDate is in ISO format
+    const formattedData = {
       ...data,
-      maturityDate: data.maturityDate instanceof Date
-        ? data.maturityDate.toISOString()    // e.g. "2025-10-25T00:00:00.000Z"
-        : data.maturityDate
+      maturityDate: data.maturityDate ? new Date(data.maturityDate).toISOString().split('T')[0] : null
     };
-
+    
     const response = await fetch(`${API_BASE_URL}/fixed-deposits`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(payload)
+      body: JSON.stringify(formattedData)
     });
-
     if (!response.ok) throw new Error('Failed to create fixed deposit');
+    return response.json();
+  }
+};
+
+// Stock API
+export const stockAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/stocks`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch stocks');
+    return response.json();
+  },
+  
+  create: async (data: any) => {
+    // Ensure purchaseDate is in ISO format
+    const formattedData = {
+      ...data,
+      purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString().split('T')[0] : null
+    };
+    
+    const response = await fetch(`${API_BASE_URL}/stocks`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(formattedData)
+    });
+    if (!response.ok) throw new Error('Failed to create stock');
     return response.json();
   }
 };
