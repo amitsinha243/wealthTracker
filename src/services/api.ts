@@ -151,3 +151,32 @@ export const expenseAPI = {
     if (!response.ok) throw new Error('Failed to delete expense');
   }
 };
+
+// -------------------- Income API --------------------
+export const incomeAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/incomes`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch incomes');
+    return response.json();
+  },
+
+  create: async (data: any) => {
+    const response = await fetch(`${API_BASE_URL}/incomes`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to create income');
+    return response.json();
+  },
+
+  delete: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete income');
+  }
+};

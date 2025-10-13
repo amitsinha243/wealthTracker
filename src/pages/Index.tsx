@@ -6,6 +6,8 @@ import { useAssets } from "@/hooks/useAssets";
 import { AssetCard } from "@/components/AssetCard";
 import { SavingsChart } from "@/components/SavingsChart";
 import { TopExpenses } from "@/components/TopExpenses";
+import { IncomeVsExpenseChart } from "@/components/IncomeVsExpenseChart";
+import { AddIncomeDialog } from "@/components/AddIncomeDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { SavingsAccountDetails } from "@/components/SavingsAccountDetails";
@@ -201,14 +203,20 @@ const Index = () => {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Financial Insights</h2>
-            <Button onClick={() => setShowAddExpense(true)}>
-              <Receipt className="h-4 w-4 mr-2" />
-              Add Expense
-            </Button>
+            <div className="flex gap-2">
+              <AddIncomeDialog />
+              <Button onClick={() => setShowAddExpense(true)}>
+                <Receipt className="h-4 w-4 mr-2" />
+                Add Expense
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <SavingsChart />
+            <IncomeVsExpenseChart />
             <TopExpenses />
+          </div>
+          <div className="grid grid-cols-1 mt-6">
+            <SavingsChart />
           </div>
         </section>
       </main>

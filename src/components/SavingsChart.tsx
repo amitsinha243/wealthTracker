@@ -1,39 +1,41 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useExpenses } from "@/hooks/useExpenses";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useAssets } from "@/hooks/useAssets";
 import { useMemo } from "react";
 
 export const SavingsChart = () => {
-  const { expenses } = useExpenses();
-  const { savingsAccounts, mutualFunds, fixedDeposits } = useAssets();
+  const { savingsAccounts, mutualFunds, fixedDeposits, stocks } = useAssets();
 
   const chartData = useMemo(() => {
-    // Group expenses by month
-    const monthlyExpenses: { [key: string]: number } = {};
-    const monthlyAssets: { [key: string]: number } = {};
+    const monthlySavings: { [key: string]: number } = {};
+    const monthlyFunds: { [key: string]: number } = {};
+    const monthlyDeposits: { [key: string]: number } = {};
+    const monthlyStocks: { [key: string]: number } = {};
     
-    expenses.forEach(expense => {
-      const date = new Date(expense.date);
+    savingsAccounts.forEach(account => {
+      const date = new Date(account.createdAt || new Date());
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyExpenses[monthKey] = (monthlyExpenses[monthKey] || 0) + expense.amount;
-    });
-
-    // Calculate total assets for each month when assets were added
-    [...savingsAccounts, ...fixedDeposits].forEach(asset => {
-      const date = new Date(asset.createdAt || new Date());
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const assetValue = 'balance' in asset ? asset.balance : asset.amount;
-      monthlyAssets[monthKey] = (monthlyAssets[monthKey] || 0) + assetValue;
+      monthlySavings[monthKey] = (monthlySavings[monthKey] || 0) + account.balance;
     });
 
     mutualFunds.forEach(fund => {
       const date = new Date(fund.purchaseDate || fund.createdAt || new Date());
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyAssets[monthKey] = (monthlyAssets[monthKey] || 0) + (fund.units * fund.nav);
+      monthlyFunds[monthKey] = (monthlyFunds[monthKey] || 0) + (fund.units * fund.nav);
     });
 
-    // Get last 6 months
+    fixedDeposits.forEach(deposit => {
+      const date = new Date(deposit.createdAt || new Date());
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyDeposits[monthKey] = (monthlyDeposits[monthKey] || 0) + deposit.amount;
+    });
+
+    stocks.forEach(stock => {
+      const date = new Date(stock.purchaseDate || stock.createdAt || new Date());
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyStocks[monthKey] = (monthlyStocks[monthKey] || 0) + (stock.quantity * stock.purchasePrice);
+    });
+
     const months = [];
     const now = new Date();
     for (let i = 5; i >= 0; i--) {
@@ -43,22 +45,24 @@ export const SavingsChart = () => {
       
       months.push({
         month: monthName,
-        expenses: monthlyExpenses[monthKey] || 0,
-        assets: monthlyAssets[monthKey] || 0,
+        'Savings Accounts': monthlySavings[monthKey] || 0,
+        'Mutual Funds': monthlyFunds[monthKey] || 0,
+        'Fixed Deposits': monthlyDeposits[monthKey] || 0,
+        'Stocks': monthlyStocks[monthKey] || 0,
       });
     }
 
     return months;
-  }, [expenses, savingsAccounts, mutualFunds, fixedDeposits]);
+  }, [savingsAccounts, mutualFunds, fixedDeposits, stocks]);
   return (
     <Card className="col-span-full lg:col-span-2 border-border/50">
       <CardHeader>
-        <CardTitle className="text-foreground">Financial Overview</CardTitle>
-        <p className="text-sm text-muted-foreground">Track your monthly expenses and asset additions</p>
+        <CardTitle className="text-foreground">Monthly Savings by Asset Type</CardTitle>
+        <p className="text-sm text-muted-foreground">Track your asset additions by category each month</p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
               dataKey="month" 
@@ -76,28 +80,14 @@ export const SavingsChart = () => {
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
               }}
-              formatter={(value: number, name: string) => {
-                if (name === 'expenses') return [`₹${value.toLocaleString('en-IN')}`, 'Expenses'];
-                return [`₹${value.toLocaleString('en-IN')}`, 'Assets Added'];
-              }}
+              formatter={(value: number) => `₹${value.toLocaleString('en-IN')}`}
             />
-            <Line 
-              type="monotone" 
-              dataKey="expenses" 
-              stroke="hsl(var(--destructive))" 
-              strokeWidth={3}
-              dot={{ fill: 'hsl(var(--destructive))', r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="assets" 
-              stroke="hsl(var(--primary))" 
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={{ fill: 'hsl(var(--primary))', r: 3 }}
-            />
-          </LineChart>
+            <Legend />
+            <Bar dataKey="Savings Accounts" stackId="a" fill="#10b981" />
+            <Bar dataKey="Mutual Funds" stackId="a" fill="#3b82f6" />
+            <Bar dataKey="Fixed Deposits" stackId="a" fill="#f59e0b" />
+            <Bar dataKey="Stocks" stackId="a" fill="#8b5cf6" />
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
