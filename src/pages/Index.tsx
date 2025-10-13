@@ -39,16 +39,18 @@ const Index = () => {
   const totalStocks = stocks.reduce((sum, stock) => sum + (stock.quantity * stock.purchasePrice), 0);
   const totalAssets = totalSavings + totalMutualFunds + totalFixedDeposits + totalStocks;
 
-  // Calculate monthly additions (current month)
+  // Calculate monthly additions (current month and previous month)
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
+  const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
   
-  const getMonthlyAddition = (assets: any[], amountKey?: string) => {
+  const getMonthlyAddition = (assets: any[], month: number, year: number, amountKey?: string) => {
     return assets
       .filter(asset => {
         if (!asset.createdAt) return false;
         const createdDate = new Date(asset.createdAt);
-        return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
+        return createdDate.getMonth() === month && createdDate.getFullYear() === year;
       })
       .reduce((sum, asset) => {
         if (amountKey) {
@@ -66,10 +68,15 @@ const Index = () => {
       }, 0);
   };
 
-  const monthlyFixedDeposits = getMonthlyAddition(fixedDeposits, 'amount');
-  const monthlyMutualFunds = getMonthlyAddition(mutualFunds);
-  const monthlySavings = getMonthlyAddition(savingsAccounts, 'balance');
-  const monthlyStocks = getMonthlyAddition(stocks);
+  const monthlyFixedDeposits = getMonthlyAddition(fixedDeposits, currentMonth, currentYear, 'amount');
+  const monthlyMutualFunds = getMonthlyAddition(mutualFunds, currentMonth, currentYear);
+  const monthlySavings = getMonthlyAddition(savingsAccounts, currentMonth, currentYear, 'balance');
+  const monthlyStocks = getMonthlyAddition(stocks, currentMonth, currentYear);
+
+  const prevMonthFixedDeposits = getMonthlyAddition(fixedDeposits, previousMonth, previousYear, 'amount');
+  const prevMonthMutualFunds = getMonthlyAddition(mutualFunds, previousMonth, previousYear);
+  const prevMonthSavings = getMonthlyAddition(savingsAccounts, previousMonth, previousYear, 'balance');
+  const prevMonthStocks = getMonthlyAddition(stocks, previousMonth, previousYear);
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,7 +131,7 @@ const Index = () => {
                 title="Fixed Deposits"
                 amount={totalFixedDeposits}
                 icon={Landmark}
-                description={`${fixedDeposits.length} deposit${fixedDeposits.length !== 1 ? 's' : ''} • This month: ₹${monthlyFixedDeposits.toLocaleString('en-IN')}`}
+                description={`${fixedDeposits.length} deposit${fixedDeposits.length !== 1 ? 's' : ''} • This month: ₹${monthlyFixedDeposits.toLocaleString('en-IN')} • Last month: ₹${prevMonthFixedDeposits.toLocaleString('en-IN')}`}
                 onViewDetails={() => setSelectedAsset('fixeddeposits')}
               />
               <Button 
@@ -141,7 +148,7 @@ const Index = () => {
                 title="Mutual Funds"
                 amount={totalMutualFunds}
                 icon={TrendingUp}
-                description={`${mutualFunds.length} fund${mutualFunds.length !== 1 ? 's' : ''} • This month: ₹${monthlyMutualFunds.toLocaleString('en-IN')}`}
+                description={`${mutualFunds.length} fund${mutualFunds.length !== 1 ? 's' : ''} • This month: ₹${monthlyMutualFunds.toLocaleString('en-IN')} • Last month: ₹${prevMonthMutualFunds.toLocaleString('en-IN')}`}
                 onViewDetails={() => setSelectedAsset('mutualfunds')}
               />
               <Button 
@@ -158,7 +165,7 @@ const Index = () => {
                 title="Savings Account"
                 amount={totalSavings}
                 icon={PiggyBank}
-                description={`${savingsAccounts.length} account${savingsAccounts.length !== 1 ? 's' : ''} • This month: ₹${monthlySavings.toLocaleString('en-IN')}`}
+                description={`${savingsAccounts.length} account${savingsAccounts.length !== 1 ? 's' : ''} • This month: ₹${monthlySavings.toLocaleString('en-IN')} • Last month: ₹${prevMonthSavings.toLocaleString('en-IN')}`}
                 onViewDetails={() => setSelectedAsset('savings')}
               />
               <Button 
@@ -175,7 +182,7 @@ const Index = () => {
                 title="Stocks"
                 amount={totalStocks}
                 icon={TrendingDown}
-                description={`${stocks.length} stock${stocks.length !== 1 ? 's' : ''} • This month: ₹${monthlyStocks.toLocaleString('en-IN')}`}
+                description={`${stocks.length} stock${stocks.length !== 1 ? 's' : ''} • This month: ₹${monthlyStocks.toLocaleString('en-IN')} • Last month: ₹${prevMonthStocks.toLocaleString('en-IN')}`}
                 onViewDetails={() => setSelectedAsset('stocks')}
               />
               <Button 
@@ -208,7 +215,7 @@ const Index = () => {
 
       {/* Asset Details Dialog */}
       <Dialog open={selectedAsset !== null} onOpenChange={() => setSelectedAsset(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl">Asset Details</DialogTitle>
           </DialogHeader>

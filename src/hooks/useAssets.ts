@@ -84,9 +84,11 @@ export const useAssets = () => {
     
     try {
       await savingsAccountAPI.create(account);
-      await fetchAssets();
+      // Force a fresh fetch with a small delay to ensure backend updates
+      setTimeout(() => fetchAssets(), 500);
     } catch (error) {
       console.error('Error adding savings account:', error);
+      throw error;
     }
   };
 
@@ -95,9 +97,11 @@ export const useAssets = () => {
     
     try {
       await mutualFundAPI.create(fund);
-      await fetchAssets();
+      // Force a fresh fetch with a small delay to ensure backend updates
+      setTimeout(() => fetchAssets(), 500);
     } catch (error) {
       console.error('Error adding mutual fund:', error);
+      throw error;
     }
   };
 
@@ -106,9 +110,11 @@ export const useAssets = () => {
     
     try {
       await fixedDepositAPI.create(deposit);
-      await fetchAssets();
+      // Force a fresh fetch with a small delay to ensure backend updates
+      setTimeout(() => fetchAssets(), 500);
     } catch (error) {
       console.error('Error adding fixed deposit:', error);
+      throw error;
     }
   };
 
@@ -117,9 +123,11 @@ export const useAssets = () => {
     
     try {
       await stockAPI.create(stock);
-      await fetchAssets();
+      // Force a fresh fetch with a small delay to ensure backend updates
+      setTimeout(() => fetchAssets(), 500);
     } catch (error) {
       console.error('Error adding stock:', error);
+      throw error;
     }
   };
 
