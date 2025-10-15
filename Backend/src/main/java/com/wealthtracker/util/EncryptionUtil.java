@@ -6,7 +6,7 @@ import java.util.Base64;
 
 public class EncryptionUtil {
     private static final String ALGORITHM = "AES";
-    private static final String KEY = "WealthTracker16"; // 16 bytes key for AES-128
+    private static final String KEY = "WealthTracker123"; // 16 bytes key for AES-128
     
     public static String encrypt(String value) {
         try {
