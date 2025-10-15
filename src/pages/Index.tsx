@@ -228,7 +228,7 @@ const Index = () => {
             <DialogTitle className="text-xl">Asset Details</DialogTitle>
           </DialogHeader>
           {selectedAsset === 'savings' && <SavingsAccountDetails accounts={savingsAccounts} />}
-          {selectedAsset === 'mutualfunds' && <MutualFundDetails funds={mutualFunds} />}
+          {selectedAsset === 'mutualfunds' && <MutualFundDetails funds={mutualFunds} onRefresh={() => window.location.reload()} />}
           {selectedAsset === 'fixeddeposits' && <FixedDepositDetails deposits={fixedDeposits} />}
           {selectedAsset === 'stocks' && <StockDetails stocks={stocks} />}
         </DialogContent>

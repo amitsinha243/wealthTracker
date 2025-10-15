@@ -1,10 +1,24 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useAssets } from "@/hooks/useAssets";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { mutualFundAPI } from "@/services/api";
 
 export const SavingsChart = () => {
   const { savingsAccounts, mutualFunds, fixedDeposits, stocks } = useAssets();
+  const [transactions, setTransactions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const data = await mutualFundAPI.getAllTransactions();
+        setTransactions(data);
+      } catch (error) {
+        console.error('Failed to fetch transactions:', error);
+      }
+    };
+    fetchTransactions();
+  }, [mutualFunds]);
 
   const chartData = useMemo(() => {
     const monthlySavings: { [key: string]: number } = {};
@@ -18,10 +32,11 @@ export const SavingsChart = () => {
       monthlySavings[monthKey] = (monthlySavings[monthKey] || 0) + account.balance;
     });
 
-    mutualFunds.forEach(fund => {
-      const date = new Date(fund.purchaseDate || fund.createdAt || new Date());
+    // Use transactions for mutual funds
+    transactions.forEach(transaction => {
+      const date = new Date(transaction.purchaseDate);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyFunds[monthKey] = (monthlyFunds[monthKey] || 0) + (fund.units * fund.nav);
+      monthlyFunds[monthKey] = (monthlyFunds[monthKey] || 0) + (transaction.units * transaction.nav);
     });
 
     fixedDeposits.forEach(deposit => {
@@ -53,7 +68,7 @@ export const SavingsChart = () => {
     }
 
     return months;
-  }, [savingsAccounts, mutualFunds, fixedDeposits, stocks]);
+  }, [savingsAccounts, mutualFunds, fixedDeposits, stocks, transactions]);
   return (
     <Card className="col-span-full lg:col-span-2 border-border/50">
       <CardHeader>

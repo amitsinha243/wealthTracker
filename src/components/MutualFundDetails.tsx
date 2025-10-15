@@ -1,13 +1,24 @@
+import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, TrendingDown, Plus } from "lucide-react";
 import { MutualFund } from "@/hooks/useAssets";
+import { AddMutualFundUnitsDialog } from './AddMutualFundUnitsDialog';
 
 interface MutualFundDetailsProps {
   funds: MutualFund[];
+  onRefresh?: () => void;
 }
 
-export const MutualFundDetails = ({ funds }: MutualFundDetailsProps) => {
+export const MutualFundDetails = ({ funds, onRefresh }: MutualFundDetailsProps) => {
+  const [selectedFund, setSelectedFund] = useState<any>(null);
+  const [showAddUnitsDialog, setShowAddUnitsDialog] = useState(false);
+
+  const handleAddUnits = (fund: any) => {
+    setSelectedFund(fund);
+    setShowAddUnitsDialog(true);
+  };
   if (funds.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -65,11 +76,31 @@ export const MutualFundDetails = ({ funds }: MutualFundDetailsProps) => {
                     <p className="text-sm font-medium text-foreground">{new Date(fund.purchaseDate).toLocaleDateString('en-IN')}</p>
                   </div>
                 </div>
+                <Button 
+                  onClick={() => handleAddUnits(fund)}
+                  className="w-full mt-4"
+                  variant="outline"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Units
+                </Button>
               </div>
             </Card>
           );
         })}
       </div>
+
+      {selectedFund && (
+        <AddMutualFundUnitsDialog
+          open={showAddUnitsDialog}
+          onOpenChange={setShowAddUnitsDialog}
+          mutualFund={selectedFund}
+          onSuccess={() => {
+            onRefresh?.();
+          }}
+        />
+      )}
     </div>
   );
 };

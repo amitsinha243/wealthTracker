@@ -2,6 +2,7 @@ package com.wealthtracker.controller;
 
 import com.wealthtracker.model.SavingsAccount;
 import com.wealthtracker.repository.SavingsAccountRepository;
+import com.wealthtracker.util.EncryptionUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,13 @@ public class SavingsAccountController {
     @GetMapping
     public ResponseEntity<List<SavingsAccount>> getAll(Authentication auth) {
         String userId = (String) auth.getPrincipal();
-        return ResponseEntity.ok(savingsAccountRepository.findByUserId(userId));
+        List<SavingsAccount> accounts = savingsAccountRepository.findByUserId(userId);
+        accounts.forEach(account -> {
+            if (account.getAccountNumber() != null && !account.getAccountNumber().isEmpty()) {
+                account.setAccountNumber(EncryptionUtil.decrypt(account.getAccountNumber()));
+            }
+        });
+        return ResponseEntity.ok(accounts);
     }
     
     @PostMapping
@@ -30,6 +37,16 @@ public class SavingsAccountController {
         String userId = (String) auth.getPrincipal();
         account.setUserId(userId);
         account.setUpdatedAt(LocalDate.now());
-        return ResponseEntity.ok(savingsAccountRepository.save(account));
+        
+        // Encrypt account number before saving
+        if (account.getAccountNumber() != null && !account.getAccountNumber().isEmpty()) {
+            account.setAccountNumber(EncryptionUtil.encrypt(account.getAccountNumber()));
+        }
+        
+        SavingsAccount savedAccount = savingsAccountRepository.save(account);
+        
+        // Decrypt for response
+        savedAccount.setAccountNumber(EncryptionUtil.decrypt(savedAccount.getAccountNumber()));
+        return ResponseEntity.ok(savedAccount);
     }
 }

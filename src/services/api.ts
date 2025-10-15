@@ -64,6 +64,32 @@ export const mutualFundAPI = {
     });
     if (!response.ok) throw new Error('Failed to create mutual fund');
     return response.json();
+  },
+
+  addUnits: async (id: string, units: number, nav: number, purchaseDate: string) => {
+    const response = await fetch(`${API_BASE_URL}/mutual-funds/${id}/add-units`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ units, nav, purchaseDate })
+    });
+    if (!response.ok) throw new Error('Failed to add units');
+    return response.json();
+  },
+
+  getTransactions: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/mutual-funds/${id}/transactions`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch transactions');
+    return response.json();
+  },
+
+  getAllTransactions: async () => {
+    const response = await fetch(`${API_BASE_URL}/mutual-funds/transactions`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch all transactions');
+    return response.json();
   }
 };
 
