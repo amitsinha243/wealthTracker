@@ -7,10 +7,15 @@ interface User {
   name: string;
 }
 
+interface AuthResult {
+  success: boolean;
+  error?: string;
+}
+
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string, name: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  signup: (email: string, password: string, name: string) => Promise<AuthResult>;
   logout: () => void;
 }
 
@@ -27,7 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string): Promise<AuthResult> => {
     try {
       const response = await authAPI.signup(email, password, name);
       const userToStore = { id: response.id, email: response.email, name: response.name };
@@ -35,14 +40,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('currentUser', JSON.stringify(userToStore));
       setUser(userToStore);
-      return true;
-    } catch (error) {
+      return { success: true };
+    } catch (error: any) {
       console.error('Signup error:', error);
-      return false;
+      const errorMessage = error.response?.data?.message || error.message || 'Email already exists or signup failed';
+      return { success: false, error: errorMessage };
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<AuthResult> => {
     try {
       const response = await authAPI.login(email, password);
       const userToStore = { id: response.id, email: response.email, name: response.name };
@@ -50,10 +56,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('currentUser', JSON.stringify(userToStore));
       setUser(userToStore);
-      return true;
-    } catch (error) {
+      return { success: true };
+    } catch (error: any) {
       console.error('Login error:', error);
-      return false;
+      const errorMessage = error.response?.data?.message || error.message || 'Invalid email or password';
+      return { success: false, error: errorMessage };
     }
   };
 

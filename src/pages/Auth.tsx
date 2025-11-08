@@ -17,23 +17,23 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await login(email, password);
-    if (success) {
+    const result = await login(email, password);
+    if (result.success) {
       toast.success('Logged in successfully!');
       navigate('/');
     } else {
-      toast.error('Invalid credentials');
+      toast.error(result.error || 'Login failed');
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await signup(email, password, name);
-    if (success) {
+    const result = await signup(email, password, name);
+    if (result.success) {
       toast.success('Account created successfully!');
       navigate('/');
     } else {
-      toast.error('Email already exists or signup failed');
+      toast.error(result.error || 'Signup failed');
     }
   };
 
