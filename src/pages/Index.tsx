@@ -22,7 +22,20 @@ type AssetType = 'savings' | 'mutualfunds' | 'fixeddeposits' | 'stocks' | null;
 const Index = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { savingsAccounts, mutualFunds, fixedDeposits, stocks } = useAssets();
+  const { 
+    savingsAccounts, 
+    mutualFunds, 
+    fixedDeposits, 
+    stocks,
+    updateSavingsAccount,
+    updateMutualFund,
+    updateFixedDeposit,
+    updateStock,
+    deleteSavingsAccount,
+    deleteMutualFund,
+    deleteFixedDeposit,
+    deleteStock
+  } = useAssets();
   const [selectedAsset, setSelectedAsset] = useState<AssetType>(null);
   const [addAssetType, setAddAssetType] = useState<'savings' | 'mutual-fund' | 'fixed-deposit' | 'stock' | null>(null);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -227,10 +240,10 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle className="text-xl">Asset Details</DialogTitle>
           </DialogHeader>
-          {selectedAsset === 'savings' && <SavingsAccountDetails accounts={savingsAccounts} />}
-          {selectedAsset === 'mutualfunds' && <MutualFundDetails funds={mutualFunds} onRefresh={() => window.location.reload()} />}
-          {selectedAsset === 'fixeddeposits' && <FixedDepositDetails deposits={fixedDeposits} />}
-          {selectedAsset === 'stocks' && <StockDetails stocks={stocks} />}
+          {selectedAsset === 'savings' && <SavingsAccountDetails accounts={savingsAccounts} onUpdate={updateSavingsAccount} onDelete={deleteSavingsAccount} />}
+          {selectedAsset === 'mutualfunds' && <MutualFundDetails funds={mutualFunds} onRefresh={() => window.location.reload()} onUpdate={updateMutualFund} onDelete={deleteMutualFund} />}
+          {selectedAsset === 'fixeddeposits' && <FixedDepositDetails deposits={fixedDeposits} onUpdate={updateFixedDeposit} onDelete={deleteFixedDeposit} />}
+          {selectedAsset === 'stocks' && <StockDetails stocks={stocks} onUpdate={updateStock} onDelete={deleteStock} />}
         </DialogContent>
       </Dialog>
 

@@ -1,13 +1,44 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Percent } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Percent, Edit, Trash2 } from "lucide-react";
 import { FixedDeposit } from "@/hooks/useAssets";
+import { EditFixedDepositDialog } from "./EditFixedDepositDialog";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface FixedDepositDetailsProps {
   deposits: FixedDeposit[];
+  onUpdate: (id: string, data: Partial<FixedDeposit>) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
-export const FixedDepositDetails = ({ deposits }: FixedDepositDetailsProps) => {
+export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepositDetailsProps) => {
+  const [editDeposit, setEditDeposit] = useState<FixedDeposit | null>(null);
+  const [deleteDepositId, setDeleteDepositId] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!deleteDepositId) return;
+    
+    try {
+      await onDelete(deleteDepositId);
+      toast.success("Fixed deposit deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete fixed deposit");
+    } finally {
+      setDeleteDepositId(null);
+    }
+  };
   if (deposits.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -77,11 +108,56 @@ export const FixedDepositDetails = ({ deposits }: FixedDepositDetailsProps) => {
                     <span>Matures on: {new Date(fd.maturityDate).toLocaleDateString('en-IN')}</span>
                   </div>
                 </div>
+
+                <div className="flex gap-2 mt-4 pt-4 border-t border-border/50">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEditDeposit(fd)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setDeleteDepositId(fd.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
               </div>
             </Card>
           );
         })}
       </div>
+
+      {editDeposit && (
+        <EditFixedDepositDialog
+          open={!!editDeposit}
+          onOpenChange={(open) => !open && setEditDeposit(null)}
+          deposit={editDeposit}
+          onUpdate={onUpdate}
+        />
+      )}
+
+      <AlertDialog open={!!deleteDepositId} onOpenChange={(open) => !open && setDeleteDepositId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Fixed Deposit</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this fixed deposit? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

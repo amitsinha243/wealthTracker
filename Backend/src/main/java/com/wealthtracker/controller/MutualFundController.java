@@ -109,4 +109,44 @@ public class MutualFundController {
         String userId = (String) auth.getPrincipal();
         return ResponseEntity.ok(transactionRepository.findByUserId(userId));
     }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<MutualFund> update(@PathVariable String id, @RequestBody MutualFund fund, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        
+        MutualFund existingFund = mutualFundRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Mutual fund not found"));
+        
+        if (!existingFund.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        existingFund.setFundName(fund.getFundName());
+        existingFund.setSchemeName(fund.getSchemeName());
+        existingFund.setUnits(fund.getUnits());
+        existingFund.setNav(fund.getNav());
+        existingFund.setPurchaseDate(fund.getPurchaseDate());
+        existingFund.setUpdatedAt(LocalDate.now());
+        
+        return ResponseEntity.ok(mutualFundRepository.save(existingFund));
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        
+        MutualFund fund = mutualFundRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Mutual fund not found"));
+        
+        if (!fund.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        // Delete associated transactions
+        transactionRepository.deleteByMutualFundId(id);
+        
+        // Delete the fund
+        mutualFundRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
 }

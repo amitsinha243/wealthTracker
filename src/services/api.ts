@@ -42,6 +42,24 @@ export const savingsAccountAPI = {
     });
     if (!response.ok) throw new Error('Failed to create savings account');
     return response.json();
+  },
+
+  update: async (id: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/savings-accounts/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update savings account');
+    return response.json();
+  },
+
+  delete: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/savings-accounts/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete savings account');
   }
 };
 
@@ -90,6 +108,24 @@ export const mutualFundAPI = {
     });
     if (!response.ok) throw new Error('Failed to fetch all transactions');
     return response.json();
+  },
+
+  update: async (id: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/mutual-funds/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update mutual fund');
+    return response.json();
+  },
+
+  delete: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/mutual-funds/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete mutual fund');
   }
 };
 
@@ -117,6 +153,29 @@ export const fixedDepositAPI = {
     });
     if (!response.ok) throw new Error('Failed to create fixed deposit');
     return response.json();
+  },
+
+  update: async (id: string, data: any) => {
+    const formattedData = {
+      ...data,
+      maturityDate: data.maturityDate ? new Date(data.maturityDate).toISOString().split('T')[0] : null
+    };
+    
+    const response = await fetch(`${API_BASE_URL}/fixed-deposits/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(formattedData)
+    });
+    if (!response.ok) throw new Error('Failed to update fixed deposit');
+    return response.json();
+  },
+
+  delete: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/fixed-deposits/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete fixed deposit');
   }
 };
 
@@ -144,6 +203,29 @@ export const stockAPI = {
     });
     if (!response.ok) throw new Error('Failed to create stock');
     return response.json();
+  },
+
+  update: async (id: string, data: any) => {
+    const formattedData = {
+      ...data,
+      purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString().split('T')[0] : null
+    };
+    
+    const response = await fetch(`${API_BASE_URL}/stocks/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(formattedData)
+    });
+    if (!response.ok) throw new Error('Failed to update stock');
+    return response.json();
+  },
+
+  delete: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/stocks/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete stock');
   }
 };
 

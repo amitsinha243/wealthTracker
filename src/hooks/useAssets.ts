@@ -131,6 +131,102 @@ export const useAssets = () => {
     }
   };
 
+  const updateSavingsAccount = async (id: string, account: Partial<SavingsAccount>) => {
+    if (!user) return;
+    
+    try {
+      await savingsAccountAPI.update(id, account);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error updating savings account:', error);
+      throw error;
+    }
+  };
+
+  const updateMutualFund = async (id: string, fund: Partial<MutualFund>) => {
+    if (!user) return;
+    
+    try {
+      await mutualFundAPI.update(id, fund);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error updating mutual fund:', error);
+      throw error;
+    }
+  };
+
+  const updateFixedDeposit = async (id: string, deposit: Partial<FixedDeposit>) => {
+    if (!user) return;
+    
+    try {
+      await fixedDepositAPI.update(id, deposit);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error updating fixed deposit:', error);
+      throw error;
+    }
+  };
+
+  const updateStock = async (id: string, stock: Partial<Stock>) => {
+    if (!user) return;
+    
+    try {
+      await stockAPI.update(id, stock);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      throw error;
+    }
+  };
+
+  const deleteSavingsAccount = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      await savingsAccountAPI.delete(id);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error deleting savings account:', error);
+      throw error;
+    }
+  };
+
+  const deleteMutualFund = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      await mutualFundAPI.delete(id);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error deleting mutual fund:', error);
+      throw error;
+    }
+  };
+
+  const deleteFixedDeposit = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      await fixedDepositAPI.delete(id);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error deleting fixed deposit:', error);
+      throw error;
+    }
+  };
+
+  const deleteStock = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      await stockAPI.delete(id);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error deleting stock:', error);
+      throw error;
+    }
+  };
+
   return {
     savingsAccounts,
     mutualFunds,
@@ -140,6 +236,14 @@ export const useAssets = () => {
     addSavingsAccount,
     addMutualFund,
     addFixedDeposit,
-    addStock
+    addStock,
+    updateSavingsAccount,
+    updateMutualFund,
+    updateFixedDeposit,
+    updateStock,
+    deleteSavingsAccount,
+    deleteMutualFund,
+    deleteFixedDeposit,
+    deleteStock
   };
 };

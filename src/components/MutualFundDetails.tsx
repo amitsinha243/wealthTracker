@@ -2,22 +2,51 @@ import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, Plus } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus, Edit, Trash2 } from "lucide-react";
 import { MutualFund } from "@/hooks/useAssets";
 import { AddMutualFundUnitsDialog } from './AddMutualFundUnitsDialog';
+import { EditMutualFundDialog } from './EditMutualFundDialog';
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MutualFundDetailsProps {
   funds: MutualFund[];
   onRefresh?: () => void;
+  onUpdate: (id: string, data: Partial<MutualFund>) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
-export const MutualFundDetails = ({ funds, onRefresh }: MutualFundDetailsProps) => {
+export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: MutualFundDetailsProps) => {
   const [selectedFund, setSelectedFund] = useState<any>(null);
   const [showAddUnitsDialog, setShowAddUnitsDialog] = useState(false);
+  const [editFund, setEditFund] = useState<MutualFund | null>(null);
+  const [deleteFundId, setDeleteFundId] = useState<string | null>(null);
 
   const handleAddUnits = (fund: any) => {
     setSelectedFund(fund);
     setShowAddUnitsDialog(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteFundId) return;
+    
+    try {
+      await onDelete(deleteFundId);
+      toast.success("Mutual fund deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete mutual fund");
+    } finally {
+      setDeleteFundId(null);
+    }
   };
   if (funds.length === 0) {
     return (
@@ -76,15 +105,31 @@ export const MutualFundDetails = ({ funds, onRefresh }: MutualFundDetailsProps) 
                     <p className="text-sm font-medium text-foreground">{new Date(fund.purchaseDate).toLocaleDateString('en-IN')}</p>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => handleAddUnits(fund)}
-                  className="w-full mt-4"
-                  variant="outline"
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Units
-                </Button>
+                <div className="flex gap-2 mt-4">
+                  <Button 
+                    onClick={() => handleAddUnits(fund)}
+                    className="flex-1"
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Units
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditFund(fund)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDeleteFundId(fund.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           );
@@ -101,6 +146,30 @@ export const MutualFundDetails = ({ funds, onRefresh }: MutualFundDetailsProps) 
           }}
         />
       )}
+
+      {editFund && (
+        <EditMutualFundDialog
+          open={!!editFund}
+          onOpenChange={(open) => !open && setEditFund(null)}
+          fund={editFund}
+          onUpdate={onUpdate}
+        />
+      )}
+
+      <AlertDialog open={!!deleteFundId} onOpenChange={(open) => !open && setDeleteFundId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Mutual Fund</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this mutual fund? This will also delete all associated transaction history. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -1,13 +1,44 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, Edit, Trash2 } from "lucide-react";
 import { SavingsAccount } from "@/hooks/useAssets";
+import { EditSavingsAccountDialog } from "./EditSavingsAccountDialog";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SavingsAccountDetailsProps {
   accounts: SavingsAccount[];
+  onUpdate: (id: string, data: Partial<SavingsAccount>) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
-export const SavingsAccountDetails = ({ accounts }: SavingsAccountDetailsProps) => {
+export const SavingsAccountDetails = ({ accounts, onUpdate, onDelete }: SavingsAccountDetailsProps) => {
+  const [editAccount, setEditAccount] = useState<SavingsAccount | null>(null);
+  const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!deleteAccountId) return;
+    
+    try {
+      await onDelete(deleteAccountId);
+      toast.success("Savings account deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete savings account");
+    } finally {
+      setDeleteAccountId(null);
+    }
+  };
   if (accounts.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -51,15 +82,55 @@ export const SavingsAccountDetails = ({ accounts }: SavingsAccountDetailsProps) 
                   </Badge>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-right space-y-2">
                 <p className="text-xl font-bold text-foreground">
                   ₹{account.balance.toLocaleString('en-IN')}
                 </p>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditAccount(account)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDeleteAccountId(account.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
         ))}
       </div>
+
+      {editAccount && (
+        <EditSavingsAccountDialog
+          open={!!editAccount}
+          onOpenChange={(open) => !open && setEditAccount(null)}
+          account={editAccount}
+          onUpdate={onUpdate}
+        />
+      )}
+
+      <AlertDialog open={!!deleteAccountId} onOpenChange={(open) => !open && setDeleteAccountId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Savings Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this savings account? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

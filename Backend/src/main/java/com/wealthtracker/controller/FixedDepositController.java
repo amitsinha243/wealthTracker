@@ -36,4 +36,39 @@ public class FixedDepositController {
         System.out.println("Deposit -> "+deposit);
         return ResponseEntity.ok(fixedDepositRepository.save(deposit));
     }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<FixedDeposit> update(@PathVariable String id, @RequestBody FixedDeposit deposit, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        
+        FixedDeposit existingDeposit = fixedDepositRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Fixed deposit not found"));
+        
+        if (!existingDeposit.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        existingDeposit.setBankName(deposit.getBankName());
+        existingDeposit.setAmount(deposit.getAmount());
+        existingDeposit.setInterestRate(deposit.getInterestRate());
+        existingDeposit.setMaturityDate(deposit.getMaturityDate());
+        existingDeposit.setUpdatedAt(LocalDate.now());
+        
+        return ResponseEntity.ok(fixedDepositRepository.save(existingDeposit));
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        
+        FixedDeposit deposit = fixedDepositRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Fixed deposit not found"));
+        
+        if (!deposit.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        fixedDepositRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
 }

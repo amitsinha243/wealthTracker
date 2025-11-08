@@ -10,4 +10,5 @@ import java.util.List;
 public interface MutualFundTransactionRepository extends MongoRepository<MutualFundTransaction, String> {
     List<MutualFundTransaction> findByMutualFundId(String mutualFundId);
     List<MutualFundTransaction> findByUserId(String userId);
+    void deleteByMutualFundId(String mutualFundId);
 }
