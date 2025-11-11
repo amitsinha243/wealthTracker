@@ -4,7 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  base: "/ember-savings/", // 👈 important
+  base: "/wealthTracker/", // 👈 important
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") }
