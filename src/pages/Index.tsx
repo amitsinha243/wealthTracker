@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wallet, TrendingUp, PiggyBank, Landmark, Plus, LogOut, Receipt, LayoutGrid, FileText, TrendingDown } from "lucide-react";
+import { Wallet, TrendingUp, PiggyBank, Landmark, Plus, LogOut, Receipt, LayoutGrid, FileText, TrendingDown, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAssets } from "@/hooks/useAssets";
 import { AssetCard } from "@/components/AssetCard";
@@ -10,6 +10,7 @@ import { IncomeVsExpenseChart } from "@/components/IncomeVsExpenseChart";
 import { AddIncomeDialog } from "@/components/AddIncomeDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SavingsAccountDetails } from "@/components/SavingsAccountDetails";
 import { MutualFundDetails } from "@/components/MutualFundDetails";
 import { FixedDepositDetails } from "@/components/FixedDepositDetails";
@@ -115,19 +116,36 @@ const Index = () => {
                   ₹{totalAssets.toLocaleString('en-IN')}
                 </p>
               </div>
-              <Button variant="outline" size="icon" asChild>
-                <Link to="/assets">
-                  <LayoutGrid className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="icon" asChild>
-                <Link to="/expenses">
-                  <FileText className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="ghost" size="icon" onClick={logout}>
-                <LogOut className="h-5 w-5" />
-              </Button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-4 mt-6">
+                    <Button variant="outline" className="justify-start" asChild>
+                      <Link to="/assets">
+                        <LayoutGrid className="h-5 w-5 mr-2" />
+                        All Assets
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="justify-start" asChild>
+                      <Link to="/expenses">
+                        <FileText className="h-5 w-5 mr-2" />
+                        All Expenses
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="justify-start" onClick={logout}>
+                      <LogOut className="h-5 w-5 mr-2" />
+                      Logout
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
