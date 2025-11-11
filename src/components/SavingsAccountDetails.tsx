@@ -6,6 +6,7 @@ import { Building2, Edit, Trash2 } from "lucide-react";
 import { SavingsAccount } from "@/hooks/useAssets";
 import { EditSavingsAccountDialog } from "./EditSavingsAccountDialog";
 import { toast } from "sonner";
+import { maskAccountNumber } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,7 +76,7 @@ export const SavingsAccountDetails = ({ accounts, onUpdate, onDelete }: SavingsA
                 <div>
                   <h4 className="font-semibold text-foreground">{account.bankName}</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    A/c: {account.accountNumber}
+                    A/c: {maskAccountNumber(account.accountNumber)}
                   </p>
                   <Badge variant="secondary" className="mt-2">
                     {account.interestRate}% interest
