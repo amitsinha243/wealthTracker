@@ -20,7 +20,7 @@ import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 type AssetType = 'savings' | 'mutualfunds' | 'fixeddeposits' | 'stocks' | null;
 
 const Index = () => {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
   const { 
     savingsAccounts, 
@@ -41,12 +41,12 @@ const Index = () => {
   const [showAddExpense, setShowAddExpense] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
-  if (!user) return null;
+  if (loading || !user) return null;
 
   const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalMutualFunds = mutualFunds.reduce((sum, fund) => sum + (fund.units * fund.nav), 0);

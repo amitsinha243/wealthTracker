@@ -27,18 +27,18 @@ import {
 import { toast } from "sonner";
 
 const Expenses = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { expenses, deleteExpense } = useExpenses();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
-  if (!user) return null;
+  if (loading || !user) return null;
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   
