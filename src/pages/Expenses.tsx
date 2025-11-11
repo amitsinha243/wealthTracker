@@ -6,6 +6,7 @@ import { useExpenses } from "@/hooks/useExpenses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NavigationMenu } from "@/components/NavigationMenu";
 import {
   Table,
   TableBody,
@@ -84,9 +85,12 @@ const Expenses = () => {
                 <h1 className="text-2xl font-bold text-foreground">All Expenses</h1>
               </div>
             </div>
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              Total: ₹{totalExpenses.toLocaleString('en-IN')}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                Total: ₹{totalExpenses.toLocaleString('en-IN')}
+              </Badge>
+              <NavigationMenu />
+            </div>
           </div>
         </div>
       </header>

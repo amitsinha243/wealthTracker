@@ -6,6 +6,7 @@ import { useAssets } from "@/hooks/useAssets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NavigationMenu } from "@/components/NavigationMenu";
 
 const Assets = () => {
   const { user, loading } = useAuth();
@@ -43,6 +44,7 @@ const Assets = () => {
                 <h1 className="text-2xl font-bold text-foreground">All Assets</h1>
               </div>
             </div>
+            <NavigationMenu />
           </div>
         </div>
       </header>
