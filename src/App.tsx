@@ -3,6 +3,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Assets from "./pages/Assets";
 import Expenses from "./pages/Expenses";
+import Trips from "./pages/Trips";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -12,6 +13,7 @@ const App = () => (
       <Route path="/auth" element={<Auth />} />
       <Route path="/assets" element={<Assets />} />
       <Route path="/expenses" element={<Expenses />} />
+      <Route path="/trips" element={<Trips />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Router>
