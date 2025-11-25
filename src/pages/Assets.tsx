@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wallet, ArrowLeft, Landmark, TrendingUp, PiggyBank } from "lucide-react";
+import { Wallet, ArrowLeft, Landmark, TrendingUp, PiggyBank, LineChart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAssets } from "@/hooks/useAssets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { NavigationMenu } from "@/components/NavigationMenu";
 const Assets = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { savingsAccounts, mutualFunds, fixedDeposits } = useAssets();
+  const { savingsAccounts, mutualFunds, fixedDeposits, stocks } = useAssets();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -24,6 +24,7 @@ const Assets = () => {
   const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalMutualFunds = mutualFunds.reduce((sum, fund) => sum + (fund.units * fund.nav), 0);
   const totalFixedDeposits = fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0);
+  const totalStocks = stocks.reduce((sum, stock) => sum + (stock.quantity * stock.purchasePrice), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,6 +144,56 @@ const Assets = () => {
                       <div className="flex justify-between pt-2 border-t">
                         <span className="text-sm text-muted-foreground">Current Value:</span>
                         <span className="font-bold text-primary">₹{currentValue.toLocaleString('en-IN')}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Stocks */}
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <LineChart className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-foreground">Stocks</h2>
+            <Badge variant="secondary" className="ml-2">
+              ₹{totalStocks.toLocaleString('en-IN')}
+            </Badge>
+          </div>
+          {stocks.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No stocks added yet
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {stocks.map((stock) => {
+                const totalValue = stock.quantity * stock.purchasePrice;
+                return (
+                  <Card key={stock.id}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{stock.stockName}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{stock.symbol}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Quantity:</span>
+                        <span className="font-semibold">{stock.quantity}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Purchase Price:</span>
+                        <span className="font-semibold">₹{stock.purchasePrice}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Purchase Date:</span>
+                        <span className="font-semibold">{new Date(stock.purchaseDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t">
+                        <span className="text-sm text-muted-foreground">Total Value:</span>
+                        <span className="font-bold text-primary">₹{totalValue.toLocaleString('en-IN')}</span>
                       </div>
                     </CardContent>
                   </Card>
