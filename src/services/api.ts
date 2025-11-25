@@ -288,3 +288,78 @@ export const incomeAPI = {
     if (!response.ok) throw new Error('Failed to delete income');
   }
 };
+
+// -------------------- Trip API --------------------
+export const tripAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/trips`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch trips');
+    return response.json();
+  },
+
+  create: async (data: any) => {
+    const response = await fetch(`${API_BASE_URL}/trips`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to create trip');
+    return response.json();
+  },
+
+  update: async (id: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/trips/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update trip');
+    return response.json();
+  },
+
+  delete: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/trips/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete trip');
+  },
+
+  getExpenses: async (tripId: string) => {
+    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/expenses`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch trip expenses');
+    return response.json();
+  },
+
+  addExpense: async (tripId: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/expenses`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to add expense');
+    return response.json();
+  },
+
+  updateExpense: async (tripId: string, expenseId: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/expenses/${expenseId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update expense');
+    return response.json();
+  },
+
+  deleteExpense: async (tripId: string, expenseId: string) => {
+    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/expenses/${expenseId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete expense');
+  }
+};
