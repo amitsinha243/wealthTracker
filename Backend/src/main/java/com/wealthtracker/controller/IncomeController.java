@@ -31,6 +31,21 @@ public class IncomeController {
         return ResponseEntity.ok(savedIncome);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Income> updateIncome(@PathVariable String id, @RequestBody Income income, Authentication authentication) {
+        String userId = authentication.getName();
+        Income existingIncome = incomeRepository.findById(id).orElse(null);
+        
+        if (existingIncome != null && existingIncome.getUserId().equals(userId)) {
+            income.setId(id);
+            income.setUserId(userId);
+            Income updatedIncome = incomeRepository.save(income);
+            return ResponseEntity.ok(updatedIncome);
+        }
+        
+        return ResponseEntity.notFound().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteIncome(@PathVariable String id, Authentication authentication) {
         String userId = authentication.getName();

@@ -280,6 +280,16 @@ export const incomeAPI = {
     return response.json();
   },
 
+  update: async (id: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update income');
+    return response.json();
+  },
+
   delete: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
       method: 'DELETE',
