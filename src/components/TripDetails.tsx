@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, Plus, Users, Receipt } from "lucide-react";
+import { Trash2, Plus, Users, Receipt, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTrips } from "@/hooks/useTrips";
 import { useToast } from "@/hooks/use-toast";
 import { AddTripExpenseDialog } from "@/components/AddTripExpenseDialog";
+import { EditTripExpenseDialog } from "@/components/EditTripExpenseDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,8 @@ export const TripDetails = ({ trip, onClose }: TripDetailsProps) => {
   const { toast } = useToast();
   const [expenses, setExpenses] = useState<any[]>([]);
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [showEditExpense, setShowEditExpense] = useState(false);
+  const [editExpense, setEditExpense] = useState<any | null>(null);
   const [deleteExpenseId, setDeleteExpenseId] = useState<string | null>(null);
   const [showDeleteTrip, setShowDeleteTrip] = useState(false);
 
@@ -259,14 +262,25 @@ export const TripDetails = ({ trip, onClose }: TripDetailsProps) => {
                           )}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteExpenseId(expense.id)}
-                        className="ml-2"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditExpense(expense);
+                            setShowEditExpense(true);
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteExpenseId(expense.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -286,6 +300,18 @@ export const TripDetails = ({ trip, onClose }: TripDetailsProps) => {
         tripId={trip.id}
         participants={trip.participants}
       />
+
+      {/* Edit Expense Dialog */}
+      {editExpense && (
+        <EditTripExpenseDialog
+          open={showEditExpense}
+          onOpenChange={setShowEditExpense}
+          tripId={trip.id}
+          expense={editExpense}
+          participants={trip.participants}
+          onUpdate={loadExpenses}
+        />
+      )}
 
       {/* Delete Expense Dialog */}
       <AlertDialog open={!!deleteExpenseId} onOpenChange={() => setDeleteExpenseId(null)}>
