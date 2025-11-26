@@ -65,7 +65,7 @@ public class TripController {
         }
         
         // Delete all expenses associated with this trip
-        List<TripExpense> expenses = tripExpenseRepository.findByTripId(id);
+        List<TripExpense> expenses = tripExpenseRepository.findByTripIdOrderByExpenseDateDesc(id);
         tripExpenseRepository.deleteAll(expenses);
         
         tripRepository.deleteById(id);
@@ -82,7 +82,7 @@ public class TripController {
             return ResponseEntity.status(403).build();
         }
         
-        return ResponseEntity.ok(tripExpenseRepository.findByTripId(tripId));
+        return ResponseEntity.ok(tripExpenseRepository.findByTripIdOrderByExpenseDateDesc(tripId));
     }
     
     @PostMapping("/{tripId}/expenses")

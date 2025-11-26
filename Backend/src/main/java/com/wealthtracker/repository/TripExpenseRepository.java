@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface TripExpenseRepository extends MongoRepository<TripExpense, String> {
-    List<TripExpense> findByTripId(String tripId);
+    List<TripExpense> findByTripIdOrderByExpenseDateDesc(String tripId);
 }
