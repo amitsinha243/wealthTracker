@@ -44,6 +44,17 @@ export const useIncome = () => {
     }
   };
 
+  const updateIncome = async (id: string, income: Partial<Income>) => {
+    if (!user) return;
+    
+    try {
+      await incomeAPI.update(id, income);
+      await fetchIncomes();
+    } catch (error) {
+      console.error('Error updating income:', error);
+    }
+  };
+
   const deleteIncome = async (id: string) => {
     if (!user) return;
     
@@ -55,5 +66,5 @@ export const useIncome = () => {
     }
   };
 
-  return { incomes, loading, addIncome, deleteIncome };
+  return { incomes, loading, addIncome, updateIncome, deleteIncome };
 };

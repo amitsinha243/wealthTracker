@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Receipt } from "lucide-react";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useIncome } from "@/hooks/useIncome";
+import { IncomeList } from "@/components/IncomeList";
 import { useMemo } from "react";
 
 export const IncomeVsExpenseChart = () => {
   const { expenses } = useExpenses();
   const { incomes } = useIncome();
+  const [showIncomeList, setShowIncomeList] = useState(false);
 
   const chartData = useMemo(() => {
     const monthlyExpenses: { [key: string]: number } = {};
@@ -42,11 +48,20 @@ export const IncomeVsExpenseChart = () => {
   }, [expenses, incomes]);
 
   return (
-    <Card className="col-span-full lg:col-span-2 border-border/50">
-      <CardHeader>
-        <CardTitle className="text-foreground">Income vs Expense</CardTitle>
-        <p className="text-sm text-muted-foreground">Monthly comparison of your income and expenses</p>
-      </CardHeader>
+    <>
+      <Card className="col-span-full lg:col-span-2 border-border/50">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-foreground">Income vs Expense</CardTitle>
+              <p className="text-sm text-muted-foreground">Monthly comparison of your income and expenses</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowIncomeList(true)}>
+              <Receipt className="h-4 w-4 mr-2" />
+              View Incomes
+            </Button>
+          </div>
+        </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
@@ -93,5 +108,16 @@ export const IncomeVsExpenseChart = () => {
         </ResponsiveContainer>
       </CardContent>
     </Card>
+
+    {/* Income List Dialog */}
+    <Dialog open={showIncomeList} onOpenChange={setShowIncomeList}>
+      <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>Income Entries</DialogTitle>
+        </DialogHeader>
+        <IncomeList />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
