@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Menu, LayoutGrid, FileText, LogOut, Plane } from "lucide-react";
+import { Menu, LayoutGrid, FileText, LogOut, Plane, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,6 +41,12 @@ export const NavigationMenu = () => {
             <Link to="/trips">
               <Plane className="h-5 w-5 mr-2" />
               Trip Expenses
+            </Link>
+          </Button>
+          <Button variant="outline" className="justify-start" asChild>
+            <Link to="/ai-assistant">
+              <Bot className="h-5 w-5 mr-2" />
+              AI Assistant
             </Link>
           </Button>
           <Button variant="outline" className="justify-start" onClick={logout}>
