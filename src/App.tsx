@@ -4,6 +4,7 @@ import Auth from "./pages/Auth";
 import Assets from "./pages/Assets";
 import Expenses from "./pages/Expenses";
 import Trips from "./pages/Trips";
+import AIAssistant from "./pages/AIAssistant";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -14,6 +15,7 @@ const App = () => (
       <Route path="/assets" element={<Assets />} />
       <Route path="/expenses" element={<Expenses />} />
       <Route path="/trips" element={<Trips />} />
+      <Route path="/ai-assistant" element={<AIAssistant />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Router>
