@@ -1,13 +1,14 @@
 package com.wealthtracker.controller;
 
 import com.wealthtracker.model.Expense;
+import com.wealthtracker.model.SavingsAccount;
 import com.wealthtracker.repository.ExpenseRepository;
+import com.wealthtracker.repository.SavingsAccountRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -15,9 +16,11 @@ import java.util.List;
 public class ExpenseController {
     
     private final ExpenseRepository expenseRepository;
+    private final SavingsAccountRepository savingsAccountRepository;
     
-    public ExpenseController(ExpenseRepository expenseRepository) {
+    public ExpenseController(ExpenseRepository expenseRepository, SavingsAccountRepository savingsAccountRepository) {
         this.expenseRepository = expenseRepository;
+        this.savingsAccountRepository = savingsAccountRepository;
     }
 
     @GetMapping
@@ -32,6 +35,23 @@ public class ExpenseController {
         String userId = (String) auth.getPrincipal();
         expense.setUserId(userId);
         expense.setUpdatedAt(LocalDate.now());
+        
+        // If a savings account is selected, deduct the expense amount from it
+        if (expense.getSavingsAccountId() != null && !expense.getSavingsAccountId().isEmpty()) {
+            SavingsAccount account = savingsAccountRepository.findById(expense.getSavingsAccountId())
+                    .orElseThrow(() -> new RuntimeException("Savings account not found"));
+            
+            // Verify the account belongs to the user
+            if (!account.getUserId().equals(userId)) {
+                return ResponseEntity.status(403).build();
+            }
+            
+            // Deduct the amount from the savings account
+            account.setBalance(account.getBalance() - expense.getAmount());
+            account.setUpdatedAt(LocalDate.now());
+            savingsAccountRepository.save(account);
+        }
+        
         return ResponseEntity.ok(expenseRepository.save(expense));
     }
     
