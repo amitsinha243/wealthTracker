@@ -16,8 +16,9 @@ public class Expense {
     private String userId;
     private String category;
     private Double amount;
-    private LocalDate date; // Changed from LocalDateTime to LocalDate
+    private LocalDate date;
     private String description;
+    private String savingsAccountId; // Optional: link to savings account for auto-deduction
 
     private LocalDate createdAt;
     private LocalDate updatedAt;

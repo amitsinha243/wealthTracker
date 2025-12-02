@@ -8,6 +8,7 @@ export interface Expense {
   amount: number;
   date: string;
   description?: string;
+  savingsAccountId?: string;
 }
 
 export const useExpenses = () => {

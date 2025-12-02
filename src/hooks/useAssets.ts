@@ -233,6 +233,7 @@ export const useAssets = () => {
     fixedDeposits,
     stocks,
     loading,
+    fetchAssets,
     addSavingsAccount,
     addMutualFund,
     addFixedDeposit,
