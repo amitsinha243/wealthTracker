@@ -80,24 +80,24 @@ public class AIAssistantService {
     private String getPortfolioSummary(String userId) {
         StringBuilder summary = new StringBuilder();
         
-        // Stocks
+        // Stocks - using purchasePrice as current value since currentPrice doesn't exist
         List<Stock> stocks = stockRepository.findByUserId(userId);
         double stockValue = stocks.stream()
-            .mapToDouble(s -> s.getQuantity() * s.getCurrentPrice())
+            .mapToDouble(s -> s.getQuantity() * s.getPurchasePrice())
             .sum();
         summary.append(String.format("Stocks: ₹%.2f (%d holdings)\n", stockValue, stocks.size()));
         
-        // Mutual Funds
+        // Mutual Funds - using nav field
         List<MutualFund> mutualFunds = mutualFundRepository.findByUserId(userId);
         double mfValue = mutualFunds.stream()
-            .mapToDouble(mf -> mf.getUnits() * mf.getCurrentNav())
+            .mapToDouble(mf -> mf.getUnits() * mf.getNav())
             .sum();
         summary.append(String.format("Mutual Funds: ₹%.2f (%d funds)\n", mfValue, mutualFunds.size()));
         
-        // Fixed Deposits
+        // Fixed Deposits - using amount field
         List<FixedDeposit> fixedDeposits = fixedDepositRepository.findByUserId(userId);
         double fdValue = fixedDeposits.stream()
-            .mapToDouble(FixedDeposit::getPrincipal)
+            .mapToDouble(FixedDeposit::getAmount)
             .sum();
         summary.append(String.format("Fixed Deposits: ₹%.2f (%d FDs)\n", fdValue, fixedDeposits.size()));
         
@@ -129,17 +129,19 @@ public class AIAssistantService {
         List<Expense> expenses = expenseRepository.findByUserId(userId);
         List<Income> incomes = incomeRepository.findByUserId(userId);
         
-        // Monthly expenses
+        // Monthly expenses - using date field and converting to string
         Map<String, Double> monthlyExpenses = expenses.stream()
+            .filter(e -> e.getDate() != null)
             .collect(Collectors.groupingBy(
-                e -> e.getExpenseDate().substring(0, 7), // YYYY-MM
+                e -> e.getDate().toString().substring(0, 7), // YYYY-MM
                 Collectors.summingDouble(Expense::getAmount)
             ));
         
-        // Monthly income
+        // Monthly income - using date field and converting to string
         Map<String, Double> monthlyIncome = incomes.stream()
+            .filter(i -> i.getDate() != null)
             .collect(Collectors.groupingBy(
-                i -> i.getIncomeDate().substring(0, 7),
+                i -> i.getDate().toString().substring(0, 7),
                 Collectors.summingDouble(Income::getAmount)
             ));
         
@@ -180,50 +182,41 @@ public class AIAssistantService {
     private String getPerformanceAnalysis(String userId) {
         StringBuilder analysis = new StringBuilder();
         
-        // Stock performance
+        // Stock performance - using purchasePrice only since currentPrice doesn't exist
         List<Stock> stocks = stockRepository.findByUserId(userId);
         if (!stocks.isEmpty()) {
-            analysis.append("Stock Performance:\n");
+            analysis.append("Stock Holdings:\n");
             for (Stock stock : stocks) {
                 double invested = stock.getQuantity() * stock.getPurchasePrice();
-                double current = stock.getQuantity() * stock.getCurrentPrice();
-                double returns = ((current - invested) / invested) * 100;
-                analysis.append(String.format("- %s: %.2f%% returns (₹%.2f → ₹%.2f)\n", 
-                    stock.getStockName(), returns, invested, current));
+                analysis.append(String.format("- %s: %s shares, invested ₹%.2f\n", 
+                    stock.getStockName(), stock.getQuantity(), invested));
             }
         }
         
-        // Mutual fund performance
+        // Mutual fund performance - using nav field only
         List<MutualFund> mutualFunds = mutualFundRepository.findByUserId(userId);
         if (!mutualFunds.isEmpty()) {
-            analysis.append("\nMutual Fund Performance:\n");
+            analysis.append("\nMutual Fund Holdings:\n");
             for (MutualFund mf : mutualFunds) {
-                double invested = mf.getUnits() * mf.getPurchaseNav();
-                double current = mf.getUnits() * mf.getCurrentNav();
-                double returns = ((current - invested) / invested) * 100;
-                analysis.append(String.format("- %s: %.2f%% returns (₹%.2f → ₹%.2f)\n", 
-                    mf.getFundName(), returns, invested, current));
+                double currentValue = mf.getUnits() * mf.getNav();
+                analysis.append(String.format("- %s: %.4f units at NAV ₹%.2f = ₹%.2f\n", 
+                    mf.getFundName(), mf.getUnits(), mf.getNav(), currentValue));
             }
         }
         
-        // Overall returns
-        double totalInvested = 0;
-        double totalCurrent = 0;
+        // Overall portfolio value
+        double totalStockValue = stocks.stream()
+            .mapToDouble(s -> s.getQuantity() * s.getPurchasePrice())
+            .sum();
         
-        for (Stock s : stocks) {
-            totalInvested += s.getQuantity() * s.getPurchasePrice();
-            totalCurrent += s.getQuantity() * s.getCurrentPrice();
-        }
+        double totalMfValue = mutualFunds.stream()
+            .mapToDouble(mf -> mf.getUnits() * mf.getNav())
+            .sum();
         
-        for (MutualFund mf : mutualFunds) {
-            totalInvested += mf.getUnits() * mf.getPurchaseNav();
-            totalCurrent += mf.getUnits() * mf.getCurrentNav();
-        }
+        double totalInvestmentValue = totalStockValue + totalMfValue;
         
-        if (totalInvested > 0) {
-            double overallReturns = ((totalCurrent - totalInvested) / totalInvested) * 100;
-            analysis.append(String.format("\nOverall Investment Returns: %.2f%%\n", overallReturns));
-            analysis.append(String.format("Total Gains/Loss: ₹%.2f\n", totalCurrent - totalInvested));
+        if (totalInvestmentValue > 0) {
+            analysis.append(String.format("\nTotal Investment Value: ₹%.2f\n", totalInvestmentValue));
         }
         
         return analysis.toString();
