@@ -7,11 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, loading, login, signup } = useAuth();
   const navigate = useNavigate();
 
@@ -24,23 +26,33 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await login(email, password);
-    if (result.success) {
-      toast.success('Logged in successfully!');
-      navigate('/');
-    } else {
-      toast.error(result.error || 'Login failed');
+    setIsSubmitting(true);
+    try {
+      const result = await login(email, password);
+      if (result.success) {
+        toast.success('Logged in successfully!');
+        navigate('/');
+      } else {
+        toast.error(result.error || 'Login failed');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await signup(email, password, name);
-    if (result.success) {
-      toast.success('Account created successfully!');
-      navigate('/');
-    } else {
-      toast.error(result.error || 'Signup failed');
+    setIsSubmitting(true);
+    try {
+      const result = await signup(email, password, name);
+      if (result.success) {
+        toast.success('Account created successfully!');
+        navigate('/');
+      } else {
+        toast.error(result.error || 'Signup failed');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -67,6 +79,7 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
@@ -77,9 +90,19 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
-                <Button type="submit" className="w-full">Login</Button>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging in...
+                    </>
+                  ) : (
+                    'Login'
+                  )}
+                </Button>
               </form>
             </TabsContent>
             <TabsContent value="signup">
@@ -92,6 +115,7 @@ const Auth = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
@@ -102,6 +126,7 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
@@ -112,9 +137,19 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
-                <Button type="submit" className="w-full">Sign Up</Button>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    'Sign Up'
+                  )}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
