@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Wallet, ArrowLeft, Receipt, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExpenses } from "@/hooks/useExpenses";
+import { useAssets } from "@/hooks/useAssets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +32,15 @@ const Expenses = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { expenses, deleteExpense } = useExpenses();
+  const { savingsAccounts } = useAssets();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Helper to get bank name from savings account ID
+  const getBankName = (savingsAccountId?: string) => {
+    if (!savingsAccountId) return '-';
+    const account = savingsAccounts.find(acc => acc.id === savingsAccountId);
+    return account ? account.bankName : '-';
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -124,6 +133,7 @@ const Expenses = () => {
                           <TableHead>Date</TableHead>
                           <TableHead>Category</TableHead>
                           <TableHead>Description</TableHead>
+                          <TableHead>Bank Account</TableHead>
                           <TableHead className="text-right">Amount</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -139,6 +149,9 @@ const Expenses = () => {
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {expense.description || '-'}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {getBankName(expense.savingsAccountId)}
                             </TableCell>
                             <TableCell className="text-right font-semibold">
                               ₹{expense.amount.toLocaleString('en-IN')}
