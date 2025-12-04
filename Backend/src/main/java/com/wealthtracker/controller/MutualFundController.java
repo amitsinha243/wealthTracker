@@ -71,9 +71,15 @@ public class MutualFundController {
         String purchaseDateStr = request.get("purchaseDate").toString();
         LocalDate purchaseDate = LocalDate.parse(purchaseDateStr);
         
-        // Update total units and latest NAV
-        fund.setUnits(fund.getUnits() + newUnits);
-        fund.setNav(newNav);
+        // Calculate weighted average NAV for SIP
+        Double oldUnits = fund.getUnits();
+        Double oldNav = fund.getNav();
+        Double totalUnits = oldUnits + newUnits;
+        Double weightedAvgNav = ((oldUnits * oldNav) + (newUnits * newNav)) / totalUnits;
+        
+        // Update total units and weighted average NAV
+        fund.setUnits(totalUnits);
+        fund.setNav(Math.round(weightedAvgNav * 100.0) / 100.0); // Round to 2 decimal places
         fund.setUpdatedAt(LocalDate.now());
         
         MutualFund updatedFund = mutualFundRepository.save(fund);
