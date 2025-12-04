@@ -41,13 +41,7 @@ const Index = () => {
   const [addAssetType, setAddAssetType] = useState<'savings' | 'mutual-fund' | 'fixed-deposit' | 'stock' | null>(null);
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
-
-  if (loading || !user) return null;
+  if (loading) return null;
 
   const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalMutualFunds = mutualFunds.reduce((sum, fund) => sum + (fund.units * fund.nav), 0);
