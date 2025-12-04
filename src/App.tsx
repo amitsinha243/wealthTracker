@@ -6,16 +6,17 @@ import Expenses from "./pages/Expenses";
 import Trips from "./pages/Trips";
 import AIAssistant from "./pages/AIAssistant";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const App = () => (
   <Router>
     <Routes>
-      <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
-      <Route path="/assets" element={<Assets />} />
-      <Route path="/expenses" element={<Expenses />} />
-      <Route path="/trips" element={<Trips />} />
-      <Route path="/ai-assistant" element={<AIAssistant />} />
+      <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+      <Route path="/assets" element={<ProtectedRoute><Assets /></ProtectedRoute>} />
+      <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+      <Route path="/trips" element={<ProtectedRoute><Trips /></ProtectedRoute>} />
+      <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Router>
