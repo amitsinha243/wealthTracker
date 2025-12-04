@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL, getAuthHeaders } from "@/config/api";
 
@@ -160,12 +161,7 @@ const AIAssistant = () => {
         </Card>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 bg-card/50 py-4 mt-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} WealthTracker. All rights reserved. Developed by Amit
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
