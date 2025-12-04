@@ -149,7 +149,7 @@ export const TripDetails = ({ trip, onClose }: TripDetailsProps) => {
             <h2 className="text-2xl font-bold">{trip.tripName}</h2>
             <p className="text-muted-foreground">{trip.destination}</p>
           </div>
-          <Button variant="destructive" size="sm" onClick={() => setShowDeleteTrip(true)}>
+          <Button variant="destructive" size="sm" onClick={() => setShowDeleteTrip(true)} className="mr-6">
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
