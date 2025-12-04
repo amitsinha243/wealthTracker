@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { Footer } from "@/components/Footer";
 
 const Assets = () => {
   const { user, loading } = useAuth();
@@ -246,12 +247,7 @@ const Assets = () => {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 bg-card/50 py-4 mt-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} WealthTracker. All rights reserved. Developed by Amit
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
