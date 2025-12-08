@@ -45,6 +45,17 @@ export const useExpenses = () => {
     }
   };
 
+  const updateExpense = async (id: string, expense: Omit<Expense, 'id'>) => {
+    if (!user) return;
+    
+    try {
+      await expenseAPI.update(id, expense);
+      await fetchExpenses();
+    } catch (error) {
+      console.error('Error updating expense:', error);
+    }
+  };
+
   const deleteExpense = async (id: string) => {
     if (!user) return;
     
@@ -56,5 +67,5 @@ export const useExpenses = () => {
     }
   };
 
-  return { expenses, loading, addExpense, deleteExpense };
+  return { expenses, loading, addExpense, updateExpense, deleteExpense };
 };
