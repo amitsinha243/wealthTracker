@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wallet, ArrowLeft, Receipt, Trash2 } from "lucide-react";
+import { Wallet, ArrowLeft, Receipt, Trash2, Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useExpenses } from "@/hooks/useExpenses";
+import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useAssets } from "@/hooks/useAssets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Footer } from "@/components/Footer";
+import { EditExpenseDialog } from "@/components/EditExpenseDialog";
 import {
   Table,
   TableBody,
@@ -32,9 +33,10 @@ import { toast } from "sonner";
 const Expenses = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { expenses, deleteExpense } = useExpenses();
+  const { expenses, updateExpense, deleteExpense } = useExpenses();
   const { savingsAccounts } = useAssets();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editExpense, setEditExpense] = useState<Expense | null>(null);
 
   // Helper to get bank name from savings account ID
   const getBankName = (savingsAccountId?: string) => {
@@ -158,13 +160,22 @@ const Expenses = () => {
                               ₹{expense.amount.toLocaleString('en-IN')}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteId(expense.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setEditExpense(expense)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeleteId(expense.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -179,6 +190,14 @@ const Expenses = () => {
       </main>
 
       <Footer />
+
+      {/* Edit Expense Dialog */}
+      <EditExpenseDialog
+        open={editExpense !== null}
+        onOpenChange={(open) => !open && setEditExpense(null)}
+        expense={editExpense}
+        onUpdate={updateExpense}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>

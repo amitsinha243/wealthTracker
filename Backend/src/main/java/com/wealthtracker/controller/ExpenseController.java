@@ -55,6 +55,26 @@ public class ExpenseController {
         return ResponseEntity.ok(expenseRepository.save(expense));
     }
     
+    @PutMapping("/{id}")
+    public ResponseEntity<Expense> update(@PathVariable String id, @RequestBody Expense expenseDetails, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        Expense expense = expenseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+        
+        if (!expense.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        expense.setCategory(expenseDetails.getCategory());
+        expense.setAmount(expenseDetails.getAmount());
+        expense.setDate(expenseDetails.getDate());
+        expense.setDescription(expenseDetails.getDescription());
+        expense.setSavingsAccountId(expenseDetails.getSavingsAccountId());
+        expense.setUpdatedAt(LocalDate.now());
+        
+        return ResponseEntity.ok(expenseRepository.save(expense));
+    }
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id, Authentication auth) {
         String userId = (String) auth.getPrincipal();
