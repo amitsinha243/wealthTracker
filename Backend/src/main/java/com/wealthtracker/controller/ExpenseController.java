@@ -85,6 +85,18 @@ public class ExpenseController {
             return ResponseEntity.status(403).build();
         }
         
+        // If the expense was linked to a savings account, restore the amount
+        if (expense.getSavingsAccountId() != null && !expense.getSavingsAccountId().isEmpty()) {
+            SavingsAccount account = savingsAccountRepository.findById(expense.getSavingsAccountId())
+                    .orElse(null);
+            
+            if (account != null && account.getUserId().equals(userId)) {
+                account.setBalance(account.getBalance() + expense.getAmount());
+                account.setUpdatedAt(LocalDate.now());
+                savingsAccountRepository.save(account);
+            }
+        }
+        
         expenseRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }
