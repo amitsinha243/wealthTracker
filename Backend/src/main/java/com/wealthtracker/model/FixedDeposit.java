@@ -16,7 +16,8 @@ public class FixedDeposit {
     private String bankName;
     private Double amount;
     private Double interestRate;
-    private LocalDate maturityDate; // <- changed from LocalDateTime
+    private LocalDate maturityDate;
+    private String depositType; // "FD" for Fixed Deposit, "RD" for Recurring Deposit
 
     private LocalDate createdAt;
     private LocalDate updatedAt;
@@ -24,5 +25,6 @@ public class FixedDeposit {
     public FixedDeposit() {
         this.createdAt = LocalDate.now();
         this.updatedAt = LocalDate.now();
+        this.depositType = "FD"; // Default to Fixed Deposit
     }
 }

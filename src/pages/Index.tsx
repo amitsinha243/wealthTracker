@@ -127,7 +127,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="space-y-4">
               <AssetCard
-                title="Fixed Deposits"
+                title="Deposits"
                 amount={totalFixedDeposits}
                 icon={Landmark}
                 description={`${fixedDeposits.length} deposit${fixedDeposits.length !== 1 ? 's' : ''} • This month: ₹${monthlyFixedDeposits.toLocaleString('en-IN')} • Last month: ₹${prevMonthFixedDeposits.toLocaleString('en-IN')}`}
@@ -139,7 +139,7 @@ const Index = () => {
                 onClick={() => setAddAssetType('fixed-deposit')}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Fixed Deposit
+                Add Deposit
               </Button>
             </div>
             <div className="space-y-4">
