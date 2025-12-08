@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { FixedDeposit } from "@/hooks/useAssets";
 
@@ -23,6 +24,7 @@ export const EditFixedDepositDialog = ({
   const [amount, setAmount] = useState(deposit.amount.toString());
   const [interestRate, setInterestRate] = useState(deposit.interestRate.toString());
   const [maturityDate, setMaturityDate] = useState(deposit.maturityDate);
+  const [depositType, setDepositType] = useState<'FD' | 'RD'>(deposit.depositType || 'FD');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,13 +36,14 @@ export const EditFixedDepositDialog = ({
         bankName,
         amount: parseFloat(amount),
         interestRate: parseFloat(interestRate),
-        maturityDate
+        maturityDate,
+        depositType
       });
       
-      toast.success("Fixed deposit updated successfully!");
+      toast.success("Deposit updated successfully!");
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to update fixed deposit");
+      toast.error("Failed to update deposit");
     } finally {
       setLoading(false);
     }
@@ -50,9 +53,21 @@ export const EditFixedDepositDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Fixed Deposit</DialogTitle>
+          <DialogTitle>Edit Deposit</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="depositType">Deposit Type</Label>
+            <Select value={depositType} onValueChange={(value: 'FD' | 'RD') => setDepositType(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select deposit type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FD">Fixed Deposit (FD)</SelectItem>
+                <SelectItem value="RD">Recurring Deposit (RD)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label htmlFor="bankName">Bank Name</Label>
             <Input
@@ -63,7 +78,7 @@ export const EditFixedDepositDialog = ({
             />
           </div>
           <div>
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label htmlFor="amount">{depositType === 'RD' ? 'Monthly Installment (₹)' : 'Amount (₹)'}</Label>
             <Input
               id="amount"
               type="number"

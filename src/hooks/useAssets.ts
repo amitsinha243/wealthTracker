@@ -29,6 +29,7 @@ export interface FixedDeposit {
   amount: number;
   interestRate: number;
   maturityDate: string;
+  depositType: 'FD' | 'RD'; // FD = Fixed Deposit, RD = Recurring Deposit
   createdAt?: string;
   updatedAt?: string;
 }

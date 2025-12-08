@@ -53,11 +53,11 @@ const Assets = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Fixed Deposits */}
+        {/* Deposits */}
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <Landmark className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">Fixed Deposits</h2>
+            <h2 className="text-xl font-semibold text-foreground">Deposits</h2>
             <Badge variant="secondary" className="ml-2">
               ₹{totalFixedDeposits.toLocaleString('en-IN')}
             </Badge>
@@ -65,22 +65,40 @@ const Assets = () => {
           {fixedDeposits.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
-                No fixed deposits added yet
+                No deposits added yet
               </CardContent>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {fixedDeposits.map((fd) => {
                 const years = (new Date(fd.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
-                const maturityAmount = fd.amount * Math.pow(1 + fd.interestRate / 100, years);
+                let maturityAmount: number;
+                
+                if (fd.depositType === 'RD') {
+                  const months = Math.max(0, Math.ceil(years * 12));
+                  const monthlyRate = fd.interestRate / 100 / 12;
+                  if (monthlyRate === 0) {
+                    maturityAmount = fd.amount * months;
+                  } else {
+                    maturityAmount = fd.amount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+                  }
+                } else {
+                  maturityAmount = fd.amount * Math.pow(1 + fd.interestRate / 100, years);
+                }
+                
                 return (
                   <Card key={fd.id}>
                     <CardHeader>
                       <CardTitle className="text-lg">{fd.bankName}</CardTitle>
+                      <Badge variant="outline" className="w-fit">
+                        {fd.depositType === 'RD' ? 'Recurring Deposit' : 'Fixed Deposit'}
+                      </Badge>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Amount:</span>
+                        <span className="text-sm text-muted-foreground">
+                          {fd.depositType === 'RD' ? 'Monthly Installment:' : 'Amount:'}
+                        </span>
                         <span className="font-semibold">₹{fd.amount.toLocaleString('en-IN')}</span>
                       </div>
                       <div className="flex justify-between">

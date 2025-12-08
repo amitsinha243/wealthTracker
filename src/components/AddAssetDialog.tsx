@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAssets } from '@/hooks/useAssets';
 import { toast } from 'sonner';
 
@@ -39,7 +40,8 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
         bankName: formData.bankName,
         amount: parseFloat(formData.amount),
         interestRate: parseFloat(formData.interestRate),
-        maturityDate: formData.maturityDate
+        maturityDate: formData.maturityDate,
+        depositType: formData.depositType || 'FD'
       });
     } else if (type === 'stock') {
       addStock({
@@ -107,11 +109,23 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
       return (
         <>
           <div className="space-y-2">
+            <Label htmlFor="depositType">Deposit Type</Label>
+            <Select value={formData.depositType || 'FD'} onValueChange={(value) => setFormData({ ...formData, depositType: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select deposit type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FD">Fixed Deposit (FD)</SelectItem>
+                <SelectItem value="RD">Recurring Deposit (RD)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="bankName">Bank Name</Label>
             <Input id="bankName" value={formData.bankName || ''} onChange={(e) => setFormData({ ...formData, bankName: e.target.value })} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label htmlFor="amount">{formData.depositType === 'RD' ? 'Monthly Installment (₹)' : 'Amount (₹)'}</Label>
             <Input id="amount" type="number" value={formData.amount || ''} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required />
           </div>
           <div className="space-y-2">
@@ -156,7 +170,7 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
     if (type === 'savings') return 'Add Savings Account';
     if (type === 'mutual-fund') return 'Add Mutual Fund';
     if (type === 'stock') return 'Add Stock';
-    return 'Add Fixed Deposit';
+    return 'Add Deposit';
   };
 
   return (

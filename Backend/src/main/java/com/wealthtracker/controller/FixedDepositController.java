@@ -52,6 +52,7 @@ public class FixedDepositController {
         existingDeposit.setAmount(deposit.getAmount());
         existingDeposit.setInterestRate(deposit.getInterestRate());
         existingDeposit.setMaturityDate(deposit.getMaturityDate());
+        existingDeposit.setDepositType(deposit.getDepositType());
         existingDeposit.setUpdatedAt(LocalDate.now());
         
         return ResponseEntity.ok(fixedDepositRepository.save(existingDeposit));

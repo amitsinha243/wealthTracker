@@ -42,24 +42,46 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
   if (deposits.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No fixed deposits added yet. Click "Add Fixed Deposit" to get started.
+        No deposits added yet. Click "Add Deposit" to get started.
       </div>
     );
   }
 
-  const totalPrincipal = deposits.reduce((sum, fd) => sum + fd.amount, 0);
-  const totalMaturityAmount = deposits.reduce((sum, fd) => {
+  // Calculate maturity amount based on deposit type
+  const calculateMaturityAmount = (fd: FixedDeposit) => {
     const years = (new Date(fd.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
-    const maturityAmount = fd.amount * Math.pow(1 + fd.interestRate / 100, years);
-    return sum + maturityAmount;
+    
+    if (fd.depositType === 'RD') {
+      // For RD: M = P × [{(1 + r/n)^(n×t) – 1} / (r/n)] × (1 + r/n)
+      // Simplified monthly compound interest formula for RD
+      const months = Math.max(0, Math.ceil(years * 12));
+      const monthlyRate = fd.interestRate / 100 / 12;
+      if (monthlyRate === 0) return fd.amount * months;
+      const maturity = fd.amount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+      return maturity;
+    } else {
+      // For FD: Standard compound interest
+      const maturityAmount = fd.amount * Math.pow(1 + fd.interestRate / 100, years);
+      return maturityAmount;
+    }
+  };
+
+  const totalPrincipal = deposits.reduce((sum, fd) => {
+    if (fd.depositType === 'RD') {
+      const years = (new Date(fd.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
+      const months = Math.max(0, Math.ceil(years * 12));
+      return sum + (fd.amount * months);
+    }
+    return sum + fd.amount;
   }, 0);
+  const totalMaturityAmount = deposits.reduce((sum, fd) => sum + calculateMaturityAmount(fd), 0);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between pb-4 border-b border-border">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Fixed Deposits</h3>
-          <p className="text-sm text-muted-foreground">{deposits.length} active deposits</p>
+          <h3 className="text-lg font-semibold text-foreground">Deposits</h3>
+          <p className="text-sm text-muted-foreground">{deposits.length} active deposit{deposits.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">Total Principal</p>
@@ -72,8 +94,7 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
 
       <div className="space-y-3">
         {deposits.map((fd) => {
-          const years = (new Date(fd.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
-          const maturityAmount = fd.amount * Math.pow(1 + fd.interestRate / 100, years);
+          const maturityAmount = calculateMaturityAmount(fd);
           
           return (
             <Card 
@@ -84,6 +105,9 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="font-semibold text-foreground">{fd.bankName}</h4>
+                    <Badge variant="outline" className="mt-1">
+                      {fd.depositType === 'RD' ? 'Recurring Deposit' : 'Fixed Deposit'}
+                    </Badge>
                   </div>
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <Percent className="h-3 w-3" />
@@ -93,7 +117,9 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
 
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
                   <div>
-                    <p className="text-xs text-muted-foreground">Principal Amount</p>
+                    <p className="text-xs text-muted-foreground">
+                      {fd.depositType === 'RD' ? 'Monthly Installment' : 'Principal Amount'}
+                    </p>
                     <p className="text-lg font-bold text-foreground">₹{fd.amount.toLocaleString('en-IN')}</p>
                   </div>
                   <div>
@@ -147,9 +173,9 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
       <AlertDialog open={!!deleteDepositId} onOpenChange={(open) => !open && setDeleteDepositId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Fixed Deposit</AlertDialogTitle>
+            <AlertDialogTitle>Delete Deposit</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this fixed deposit? This action cannot be undone.
+              Are you sure you want to delete this deposit? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
