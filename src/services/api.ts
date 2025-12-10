@@ -8,7 +8,10 @@ export const authAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name })
     });
-    if (!response.ok) throw new Error('Signup failed');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Email already exists or signup failed');
+    }
     return response.json();
   },
 
@@ -18,7 +21,10 @@ export const authAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    if (!response.ok) throw new Error('Login failed');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Invalid email or password');
+    }
     return response.json();
   }
 };
