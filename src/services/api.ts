@@ -26,6 +26,32 @@ export const authAPI = {
       throw new Error(errorData.message || 'Invalid email or password');
     }
     return response.json();
+  },
+
+  forgotPassword: async (email: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to send reset email');
+    }
+    return response.json();
+  },
+
+  resetPassword: async (token: string, newPassword: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword })
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to reset password');
+    }
+    return response.json();
   }
 };
 

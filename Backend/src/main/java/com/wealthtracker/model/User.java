@@ -19,6 +19,9 @@ public class User {
     private String name;
     private String password;
     
+    private String resetToken;
+    private LocalDateTime resetTokenExpiry;
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
