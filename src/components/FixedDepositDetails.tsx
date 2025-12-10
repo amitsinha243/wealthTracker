@@ -52,12 +52,18 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
     const years = (new Date(fd.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
     
     if (fd.depositType === 'RD') {
-      // For RD: M = P × [{(1 + r/n)^(n×t) – 1} / (r/n)] × (1 + r/n)
-      // Simplified monthly compound interest formula for RD
-      const months = Math.max(0, Math.ceil(years * 12));
-      const monthlyRate = fd.interestRate / 100 / 12;
-      if (monthlyRate === 0) return fd.amount * months;
-      const maturity = fd.amount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+      // RD Formula: M = R × [(1+i)^n - 1] / [1 - (1+i)^(-1/3)]
+      // R = Monthly installment, n = number of quarters, i = quarterly interest rate
+      const quarters = Math.max(0, Math.ceil(years * 4));
+      const quarterlyRate = fd.interestRate / 400; // annual rate / 400
+      
+      if (quarterlyRate === 0) {
+        return fd.amount * quarters * 3; // Just principal for 0% interest
+      }
+      
+      const compoundFactor = Math.pow(1 + quarterlyRate, quarters);
+      const denominator = 1 - Math.pow(1 + quarterlyRate, -1/3);
+      const maturity = fd.amount * ((compoundFactor - 1) / denominator);
       return maturity;
     } else {
       // For FD: Standard compound interest
