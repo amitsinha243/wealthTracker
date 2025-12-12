@@ -62,7 +62,7 @@ export const SavingsChart = () => {
         month: monthName,
         'Savings Accounts': monthlySavings[monthKey] || 0,
         'Mutual Funds': monthlyFunds[monthKey] || 0,
-        'Fixed Deposits': monthlyDeposits[monthKey] || 0,
+        'Deposits': monthlyDeposits[monthKey] || 0,
         'Stocks': monthlyStocks[monthKey] || 0,
       });
     }
@@ -100,7 +100,7 @@ export const SavingsChart = () => {
             <Legend />
             <Bar dataKey="Savings Accounts" stackId="a" fill="#10b981" maxBarSize={40} />
             <Bar dataKey="Mutual Funds" stackId="a" fill="#3b82f6" maxBarSize={40} />
-            <Bar dataKey="Fixed Deposits" stackId="a" fill="#f59e0b" maxBarSize={40} />
+            <Bar dataKey="Deposits" stackId="a" fill="#f59e0b" maxBarSize={40} />
             <Bar dataKey="Stocks" stackId="a" fill="#8b5cf6" maxBarSize={40} />
           </BarChart>
         </ResponsiveContainer>
