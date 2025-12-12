@@ -31,7 +31,7 @@ public class EmailService {
             helper.setTo(toEmail);
             helper.setSubject("WealthTracker - Password Reset Request");
             
-            String resetLink = frontendUrl + "/auth?view=reset-password&token=" + resetToken;
+            String resetLink = frontendUrl + "/#/auth?view=reset-password&token=" + resetToken;
             
             String htmlContent = """
                 <!DOCTYPE html>
