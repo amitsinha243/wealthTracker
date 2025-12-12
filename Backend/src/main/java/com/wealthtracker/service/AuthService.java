@@ -18,11 +18,13 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService;
     
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.emailService = emailService;
     }
     
     public AuthResponse signup(SignupRequest request) {
@@ -55,7 +57,7 @@ public class AuthService {
         return new AuthResponse(token, user.getId(), user.getEmail(), user.getName());
     }
     
-    public String generateResetToken(String email) {
+    public void sendPasswordResetEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("No account found with this email"));
         
@@ -65,7 +67,7 @@ public class AuthService {
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
         
-        return resetToken;
+        emailService.sendPasswordResetEmail(email, resetToken);
     }
     
     public void resetPassword(String token, String newPassword) {

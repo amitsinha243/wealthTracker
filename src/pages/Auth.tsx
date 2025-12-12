@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { authAPI } from '@/services/api';
 import { Button } from '@/components/ui/button';
@@ -8,9 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail } from 'lucide-react';
 
-type AuthView = 'login' | 'signup' | 'forgot-password' | 'reset-password';
+type AuthView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'email-sent';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -23,6 +23,18 @@ const Auth = () => {
   const [authView, setAuthView] = useState<AuthView>('login');
   const { user, loading, login, signup } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Check for reset token in URL query params
+  useEffect(() => {
+    const view = searchParams.get('view');
+    const token = searchParams.get('token');
+    
+    if (view === 'reset-password' && token) {
+      setResetToken(token);
+      setAuthView('reset-password');
+    }
+  }, [searchParams]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -67,12 +79,11 @@ const Auth = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await authAPI.forgotPassword(email);
-      setResetToken(response.token);
-      toast.success('Reset token generated! Enter it below to reset your password.');
-      setAuthView('reset-password');
+      await authAPI.forgotPassword(email);
+      toast.success('Password reset email sent!');
+      setAuthView('email-sent');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to generate reset token');
+      toast.error(error.message || 'Failed to send reset email');
     } finally {
       setIsSubmitting(false);
     }
@@ -99,12 +110,40 @@ const Auth = () => {
       setResetToken('');
       setNewPassword('');
       setConfirmPassword('');
+      // Clear URL params
+      navigate('/auth', { replace: true });
     } catch (error: any) {
       toast.error(error.message || 'Failed to reset password');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const renderEmailSent = () => (
+    <div className="space-y-4 text-center">
+      <div className="flex justify-center">
+        <div className="rounded-full bg-primary/10 p-4">
+          <Mail className="h-8 w-8 text-primary" />
+        </div>
+      </div>
+      <h3 className="text-lg font-semibold">Check your email</h3>
+      <p className="text-muted-foreground text-sm">
+        We've sent a password reset link to <strong>{email}</strong>. 
+        Click the link in the email to reset your password.
+      </p>
+      <p className="text-muted-foreground text-xs">
+        The link will expire in 1 hour.
+      </p>
+      <Button
+        variant="outline"
+        className="w-full mt-4"
+        onClick={() => setAuthView('login')}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to Login
+      </Button>
+    </div>
+  );
 
   const renderForgotPassword = () => (
     <div className="space-y-4">
@@ -150,24 +189,15 @@ const Auth = () => {
         variant="ghost"
         size="sm"
         className="mb-2 -ml-2"
-        onClick={() => setAuthView('login')}
+        onClick={() => {
+          setAuthView('login');
+          navigate('/auth', { replace: true });
+        }}
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Login
       </Button>
       <form onSubmit={handleResetPassword} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="reset-token">Reset Token</Label>
-          <Input
-            id="reset-token"
-            type="text"
-            placeholder="Enter reset token"
-            value={resetToken}
-            onChange={(e) => setResetToken(e.target.value)}
-            required
-            disabled={isSubmitting}
-          />
-        </div>
         <div className="space-y-2">
           <Label htmlFor="new-password">New Password</Label>
           <Input
@@ -214,12 +244,14 @@ const Auth = () => {
           <CardDescription>
             {authView === 'forgot-password' && 'Reset your password'}
             {authView === 'reset-password' && 'Enter your new password'}
+            {authView === 'email-sent' && 'Password reset email sent'}
             {(authView === 'login' || authView === 'signup') && 'Manage your financial assets'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {authView === 'forgot-password' && renderForgotPassword()}
           {authView === 'reset-password' && renderResetPassword()}
+          {authView === 'email-sent' && renderEmailSent()}
           {(authView === 'login' || authView === 'signup') && (
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
