@@ -237,6 +237,32 @@ export const stockAPI = {
     return response.json();
   },
 
+  addUnits: async (id: string, quantity: number, purchasePrice: number, purchaseDate: string) => {
+    const response = await fetch(`${API_BASE_URL}/stocks/${id}/add-units`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ quantity, purchasePrice, purchaseDate })
+    });
+    if (!response.ok) throw new Error('Failed to add units');
+    return response.json();
+  },
+
+  getTransactions: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/stocks/${id}/transactions`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch transactions');
+    return response.json();
+  },
+
+  getAllTransactions: async () => {
+    const response = await fetch(`${API_BASE_URL}/stocks/transactions`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch all transactions');
+    return response.json();
+  },
+
   update: async (id: string, data: any) => {
     const formattedData = {
       ...data,

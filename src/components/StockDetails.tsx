@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Plus } from "lucide-react";
 import { Stock } from "@/hooks/useAssets";
 import { EditStockDialog } from "./EditStockDialog";
+import { AddStockUnitsDialog } from "./AddStockUnitsDialog";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -20,10 +21,12 @@ interface StockDetailsProps {
   stocks: Stock[];
   onUpdate: (id: string, data: Partial<Stock>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onRefresh: () => void;
 }
 
-export const StockDetails = ({ stocks, onUpdate, onDelete }: StockDetailsProps) => {
+export const StockDetails = ({ stocks, onUpdate, onDelete, onRefresh }: StockDetailsProps) => {
   const [editStock, setEditStock] = useState<Stock | null>(null);
+  const [addUnitsStock, setAddUnitsStock] = useState<Stock | null>(null);
   const [deleteStockId, setDeleteStockId] = useState<string | null>(null);
 
   const handleDelete = async () => {
@@ -38,6 +41,7 @@ export const StockDetails = ({ stocks, onUpdate, onDelete }: StockDetailsProps) 
       setDeleteStockId(null);
     }
   };
+
   return (
     <div className="space-y-4">
       {stocks.length === 0 ? (
@@ -54,7 +58,7 @@ export const StockDetails = ({ stocks, onUpdate, onDelete }: StockDetailsProps) 
                 <span className="font-semibold">{stock.quantity}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Purchase Price:</span>
+                <span className="text-muted-foreground">Avg. Purchase Price:</span>
                 <span className="font-semibold">₹{stock.purchasePrice.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between">
@@ -66,6 +70,15 @@ export const StockDetails = ({ stocks, onUpdate, onDelete }: StockDetailsProps) 
                 <span className="font-semibold">{new Date(stock.purchaseDate).toLocaleDateString()}</span>
               </div>
               <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setAddUnitsStock(stock)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Units
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -96,6 +109,15 @@ export const StockDetails = ({ stocks, onUpdate, onDelete }: StockDetailsProps) 
           onOpenChange={(open) => !open && setEditStock(null)}
           stock={editStock}
           onUpdate={onUpdate}
+        />
+      )}
+
+      {addUnitsStock && (
+        <AddStockUnitsDialog
+          open={!!addUnitsStock}
+          onOpenChange={(open) => !open && setAddUnitsStock(null)}
+          stock={addUnitsStock}
+          onSuccess={onRefresh}
         />
       )}
 
