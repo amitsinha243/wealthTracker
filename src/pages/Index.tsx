@@ -29,6 +29,7 @@ const Index = () => {
     mutualFunds, 
     fixedDeposits, 
     stocks,
+    fetchAssets,
     updateSavingsAccount,
     updateMutualFund,
     updateFixedDeposit,
@@ -229,7 +230,7 @@ const Index = () => {
           {selectedAsset === 'savings' && <SavingsAccountDetails accounts={savingsAccounts} onUpdate={updateSavingsAccount} onDelete={deleteSavingsAccount} />}
           {selectedAsset === 'mutualfunds' && <MutualFundDetails funds={mutualFunds} onRefresh={() => window.location.reload()} onUpdate={updateMutualFund} onDelete={deleteMutualFund} />}
           {selectedAsset === 'fixeddeposits' && <FixedDepositDetails deposits={fixedDeposits} onUpdate={updateFixedDeposit} onDelete={deleteFixedDeposit} />}
-          {selectedAsset === 'stocks' && <StockDetails stocks={stocks} onUpdate={updateStock} onDelete={deleteStock} />}
+          {selectedAsset === 'stocks' && <StockDetails stocks={stocks} onUpdate={updateStock} onDelete={deleteStock} onRefresh={fetchAssets} />}
         </DialogContent>
       </Dialog>
 
