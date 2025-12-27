@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { authAPI } from '@/services/api';
 import { Button } from '@/components/ui/button';
@@ -23,11 +23,10 @@ const Auth = () => {
   const [authView, setAuthView] = useState<AuthView>('login');
   const { user, loading, login, signup } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  // Check for reset token in URL query params (works with HashRouter)
+  // Check for reset token in URL query params
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
     const view = searchParams.get('view');
     const token = searchParams.get('token');
     
@@ -35,7 +34,7 @@ const Auth = () => {
       setResetToken(token);
       setAuthView('reset-password');
     }
-  }, [location.search]);
+  }, [searchParams]);
 
   // Redirect if already logged in
   useEffect(() => {
