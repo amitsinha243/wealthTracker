@@ -55,21 +55,18 @@ export interface Expense {
 }
 
 export const EXPENSE_CATEGORIES = [
-  'Rent',
+  'Subscriptions',
   'Groceries',
-  'Transportation',
+  'Bike Petrol',
+  'Car Petrol',
   'Utilities',
-  'Entertainment',
+  'Public Transport',
   'Healthcare',
   'Education',
   'Shopping',
   'Dining Out',
-  'Insurance',
   'EMI/Loans',
   'Personal Care',
-  'Travel',
-  'Household',
-  'Subscriptions',
   'Gifts & Donations',
   'Other'
 ] as const;
