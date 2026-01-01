@@ -55,6 +55,7 @@ export interface Expense {
 }
 
 export const EXPENSE_CATEGORIES = [
+  'Investments',
   'Subscriptions',
   'Groceries',
   'Bike Petrol',
