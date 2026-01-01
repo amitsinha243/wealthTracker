@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Percent, Edit, Trash2 } from "lucide-react";
+import { Calendar, Percent, Edit, Trash2, ChevronDown, ChevronUp, CheckCircle2, Clock } from "lucide-react";
 import { FixedDeposit } from "@/hooks/useAssets";
 import { EditFixedDepositDialog } from "./EditFixedDepositDialog";
 import { toast } from "sonner";
@@ -16,6 +16,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface FixedDepositDetailsProps {
   deposits: FixedDeposit[];
@@ -23,9 +28,35 @@ interface FixedDepositDetailsProps {
   onDelete: (id: string) => Promise<void>;
 }
 
+// Generate RD installment history
+const generateInstallmentHistory = (fd: FixedDeposit) => {
+  const startDate = new Date(fd.startDate || fd.createdAt || new Date());
+  const maturityDate = new Date(fd.maturityDate);
+  const now = new Date();
+  
+  const installments: { date: Date; amount: number; status: 'paid' | 'pending' }[] = [];
+  
+  let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  let installmentNumber = 1;
+  
+  while (currentDate < maturityDate) {
+    const isPaid = currentDate <= now;
+    installments.push({
+      date: new Date(currentDate),
+      amount: fd.amount,
+      status: isPaid ? 'paid' : 'pending'
+    });
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    installmentNumber++;
+  }
+  
+  return installments;
+};
+
 export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepositDetailsProps) => {
   const [editDeposit, setEditDeposit] = useState<FixedDeposit | null>(null);
   const [deleteDepositId, setDeleteDepositId] = useState<string | null>(null);
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!deleteDepositId) return;
@@ -49,7 +80,9 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
 
   // Calculate maturity amount based on deposit type
   const calculateMaturityAmount = (fd: FixedDeposit) => {
-    const years = (new Date(fd.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
+    const startDate = new Date(fd.startDate || fd.createdAt || new Date());
+    const maturityDate = new Date(fd.maturityDate);
+    const years = (maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
     
     if (fd.depositType === 'RD') {
       // RD Formula: M = R × [(1+i)^n - 1] / [1 - (1+i)^(-1/3)]
@@ -72,10 +105,10 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
     }
   };
 
-  // Calculate current deposited amount for RD (based on months elapsed since creation)
+  // Calculate current deposited amount for RD (based on months elapsed since start date)
   const getCurrentDepositedAmount = (fd: FixedDeposit) => {
     if (fd.depositType === 'RD') {
-      const startDate = new Date(fd.createdAt || new Date());
+      const startDate = new Date(fd.startDate || fd.createdAt || new Date());
       const now = new Date();
       const monthsElapsed = Math.max(1, 
         (now.getFullYear() - startDate.getFullYear()) * 12 + 
@@ -114,6 +147,8 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
       <div className="space-y-3">
         {deposits.map((fd) => {
           const maturityAmount = calculateMaturityAmount(fd);
+          const installments = fd.depositType === 'RD' ? generateInstallmentHistory(fd) : [];
+          const isExpanded = expandedHistoryId === fd.id;
           
           return (
             <Card 
@@ -153,11 +188,65 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
                 </div>
 
                 <div className="flex items-center gap-4 pt-2 text-sm">
+                  {fd.depositType === 'RD' && fd.startDate && (
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>Started: {new Date(fd.startDate).toLocaleDateString('en-IN')}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>Matures on: {new Date(fd.maturityDate).toLocaleDateString('en-IN')}</span>
                   </div>
                 </div>
+
+                {/* RD Installment History */}
+                {fd.depositType === 'RD' && installments.length > 0 && (
+                  <Collapsible open={isExpanded} onOpenChange={() => setExpandedHistoryId(isExpanded ? null : fd.id)}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full justify-between mt-2">
+                        <span className="text-sm">Installment History ({installments.filter(i => i.status === 'paid').length}/{installments.length} paid)</span>
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                      <div className="max-h-48 overflow-y-auto border rounded-lg border-border/50">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/50 sticky top-0">
+                            <tr>
+                              <th className="text-left px-3 py-2 font-medium">#</th>
+                              <th className="text-left px-3 py-2 font-medium">Date</th>
+                              <th className="text-right px-3 py-2 font-medium">Amount</th>
+                              <th className="text-center px-3 py-2 font-medium">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {installments.map((installment, index) => (
+                              <tr key={index} className="border-t border-border/30">
+                                <td className="px-3 py-2 text-muted-foreground">{index + 1}</td>
+                                <td className="px-3 py-2">{installment.date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</td>
+                                <td className="px-3 py-2 text-right">₹{installment.amount.toLocaleString('en-IN')}</td>
+                                <td className="px-3 py-2 text-center">
+                                  {installment.status === 'paid' ? (
+                                    <span className="inline-flex items-center gap-1 text-green-600">
+                                      <CheckCircle2 className="h-4 w-4" />
+                                      Paid
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-amber-600">
+                                      <Clock className="h-4 w-4" />
+                                      Pending
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
 
                 <div className="flex gap-2 mt-4 pt-4 border-t border-border/50">
                   <Button

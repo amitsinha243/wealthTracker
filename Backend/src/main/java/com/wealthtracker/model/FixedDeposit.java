@@ -18,6 +18,7 @@ public class FixedDeposit {
     private Double interestRate;
     private LocalDate maturityDate;
     private String depositType; // "FD" for Fixed Deposit, "RD" for Recurring Deposit
+    private LocalDate startDate; // When the RD actually started (for RDs)
 
     private LocalDate createdAt;
     private LocalDate updatedAt;

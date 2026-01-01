@@ -41,7 +41,8 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
         amount: parseFloat(formData.amount),
         interestRate: parseFloat(formData.interestRate),
         maturityDate: formData.maturityDate,
-        depositType: formData.depositType || 'FD'
+        depositType: formData.depositType || 'FD',
+        startDate: formData.depositType === 'RD' ? formData.startDate : undefined
       });
     } else if (type === 'stock') {
       addStock({
@@ -132,6 +133,12 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
             <Label htmlFor="interestRate">Interest Rate (%)</Label>
             <Input id="interestRate" type="number" step="0.01" value={formData.interestRate || ''} onChange={(e) => setFormData({ ...formData, interestRate: e.target.value })} required />
           </div>
+          {formData.depositType === 'RD' && (
+            <div className="space-y-2">
+              <Label htmlFor="startDate">RD Start Date</Label>
+              <Input id="startDate" type="date" value={formData.startDate || ''} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} required />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="maturityDate">Maturity Date</Label>
             <Input id="maturityDate" type="date" value={formData.maturityDate || ''} onChange={(e) => setFormData({ ...formData, maturityDate: e.target.value })} required />

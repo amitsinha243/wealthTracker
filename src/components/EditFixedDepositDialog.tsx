@@ -25,6 +25,7 @@ export const EditFixedDepositDialog = ({
   const [interestRate, setInterestRate] = useState(deposit.interestRate.toString());
   const [maturityDate, setMaturityDate] = useState(deposit.maturityDate);
   const [depositType, setDepositType] = useState<'FD' | 'RD'>(deposit.depositType || 'FD');
+  const [startDate, setStartDate] = useState(deposit.startDate || '');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +38,8 @@ export const EditFixedDepositDialog = ({
         amount: parseFloat(amount),
         interestRate: parseFloat(interestRate),
         maturityDate,
-        depositType
+        depositType,
+        startDate: depositType === 'RD' ? startDate : undefined
       });
       
       toast.success("Deposit updated successfully!");
@@ -99,6 +101,18 @@ export const EditFixedDepositDialog = ({
               required
             />
           </div>
+          {depositType === 'RD' && (
+            <div>
+              <Label htmlFor="startDate">RD Start Date</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+              />
+            </div>
+          )}
           <div>
             <Label htmlFor="maturityDate">Maturity Date</Label>
             <Input
