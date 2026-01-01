@@ -41,8 +41,8 @@ export const SavingsChart = () => {
 
     fixedDeposits.forEach(deposit => {
       if (deposit.depositType === 'RD') {
-        // For RD, add monthly installment for each month from creation to maturity (or now)
-        const startDate = new Date(deposit.createdAt || new Date());
+        // For RD, add monthly installment for each month from start date to maturity (or now)
+        const startDate = new Date(deposit.startDate || deposit.createdAt || new Date());
         const maturityDate = new Date(deposit.maturityDate);
         const now = new Date();
         const endDate = maturityDate < now ? maturityDate : now;
