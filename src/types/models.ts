@@ -71,6 +71,8 @@ export const EXPENSE_CATEGORIES = [
   'EMI/Loans',
   'Personal Care',
   'Gifts & Donations',
+  'Housing',
+  'Travel',
   'Other'
 ] as const;
 
