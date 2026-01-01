@@ -40,9 +40,25 @@ export const SavingsChart = () => {
     });
 
     fixedDeposits.forEach(deposit => {
-      const date = new Date(deposit.createdAt || new Date());
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyDeposits[monthKey] = (monthlyDeposits[monthKey] || 0) + deposit.amount;
+      if (deposit.depositType === 'RD') {
+        // For RD, add monthly installment for each month from creation to maturity (or now)
+        const startDate = new Date(deposit.createdAt || new Date());
+        const maturityDate = new Date(deposit.maturityDate);
+        const now = new Date();
+        const endDate = maturityDate < now ? maturityDate : now;
+        
+        let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+        while (currentDate <= endDate) {
+          const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+          monthlyDeposits[monthKey] = (monthlyDeposits[monthKey] || 0) + deposit.amount;
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        }
+      } else {
+        // For FD, add the full amount at creation date
+        const date = new Date(deposit.createdAt || new Date());
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthlyDeposits[monthKey] = (monthlyDeposits[monthKey] || 0) + deposit.amount;
+      }
     });
 
     stocks.forEach(stock => {

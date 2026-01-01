@@ -72,14 +72,27 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
     }
   };
 
-  const totalPrincipal = deposits.reduce((sum, fd) => {
+  // Calculate current deposited amount for RD (based on months elapsed since creation)
+  const getCurrentDepositedAmount = (fd: FixedDeposit) => {
     if (fd.depositType === 'RD') {
-      const years = (new Date(fd.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
-      const months = Math.max(0, Math.ceil(years * 12));
-      return sum + (fd.amount * months);
+      const startDate = new Date(fd.createdAt || new Date());
+      const now = new Date();
+      const monthsElapsed = Math.max(1, 
+        (now.getFullYear() - startDate.getFullYear()) * 12 + 
+        (now.getMonth() - startDate.getMonth()) + 1
+      );
+      const maturityDate = new Date(fd.maturityDate);
+      const totalMonths = Math.max(1,
+        (maturityDate.getFullYear() - startDate.getFullYear()) * 12 +
+        (maturityDate.getMonth() - startDate.getMonth())
+      );
+      // Cap at total months (RD tenure)
+      return fd.amount * Math.min(monthsElapsed, totalMonths);
     }
-    return sum + fd.amount;
-  }, 0);
+    return fd.amount;
+  };
+
+  const totalPrincipal = deposits.reduce((sum, fd) => sum + getCurrentDepositedAmount(fd), 0);
   const totalMaturityAmount = deposits.reduce((sum, fd) => sum + calculateMaturityAmount(fd), 0);
 
   return (
@@ -127,6 +140,11 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
                       {fd.depositType === 'RD' ? 'Monthly Installment' : 'Principal Amount'}
                     </p>
                     <p className="text-lg font-bold text-foreground">₹{fd.amount.toLocaleString('en-IN')}</p>
+                    {fd.depositType === 'RD' && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Deposited so far: <span className="font-semibold text-foreground">₹{getCurrentDepositedAmount(fd).toLocaleString('en-IN')}</span>
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Maturity Amount</p>
