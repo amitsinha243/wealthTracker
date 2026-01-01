@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Calendar, Percent, Edit, Trash2, ChevronDown, ChevronUp, CheckCircle2, Clock } from "lucide-react";
 import { FixedDeposit } from "@/hooks/useAssets";
@@ -125,6 +126,21 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
     return fd.amount;
   };
 
+  // Calculate RD progress percentage
+  const getRDProgress = (fd: FixedDeposit) => {
+    const startDate = new Date(fd.startDate || fd.createdAt || new Date());
+    const maturityDate = new Date(fd.maturityDate);
+    const now = new Date();
+    
+    const totalDuration = maturityDate.getTime() - startDate.getTime();
+    const elapsed = now.getTime() - startDate.getTime();
+    
+    if (elapsed <= 0) return 0;
+    if (elapsed >= totalDuration) return 100;
+    
+    return Math.round((elapsed / totalDuration) * 100);
+  };
+
   const totalPrincipal = deposits.reduce((sum, fd) => sum + getCurrentDepositedAmount(fd), 0);
   const totalMaturityAmount = deposits.reduce((sum, fd) => sum + calculateMaturityAmount(fd), 0);
 
@@ -149,6 +165,7 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
           const maturityAmount = calculateMaturityAmount(fd);
           const installments = fd.depositType === 'RD' ? generateInstallmentHistory(fd) : [];
           const isExpanded = expandedHistoryId === fd.id;
+          const rdProgress = fd.depositType === 'RD' ? getRDProgress(fd) : 0;
           
           return (
             <Card 
@@ -199,6 +216,17 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
                     <span>Matures on: {new Date(fd.maturityDate).toLocaleDateString('en-IN')}</span>
                   </div>
                 </div>
+
+                {/* RD Progress Bar */}
+                {fd.depositType === 'RD' && (
+                  <div className="pt-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs text-muted-foreground">Tenure Progress</span>
+                      <span className="text-xs font-semibold text-foreground">{rdProgress}% complete</span>
+                    </div>
+                    <Progress value={rdProgress} className="h-2" />
+                  </div>
+                )}
 
                 {/* RD Installment History */}
                 {fd.depositType === 'RD' && installments.length > 0 && (
