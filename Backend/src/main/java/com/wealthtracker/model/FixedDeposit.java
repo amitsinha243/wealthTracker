@@ -19,6 +19,8 @@ public class FixedDeposit {
     private LocalDate maturityDate;
     private String depositType; // "FD" for Fixed Deposit, "RD" for Recurring Deposit
     private LocalDate startDate; // When the RD actually started (for RDs)
+    private String savingsAccountId; // Linked savings account for automatic deductions (for RDs)
+    private LocalDate lastDeductionDate; // Track last processed deduction month
 
     private LocalDate createdAt;
     private LocalDate updatedAt;

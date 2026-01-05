@@ -14,7 +14,7 @@ interface AddAssetDialogProps {
 }
 
 export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps) => {
-  const { addSavingsAccount, addMutualFund, addFixedDeposit, addStock } = useAssets();
+  const { addSavingsAccount, addMutualFund, addFixedDeposit, addStock, savingsAccounts } = useAssets();
   const [formData, setFormData] = useState<any>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,7 +42,8 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
         interestRate: parseFloat(formData.interestRate),
         maturityDate: formData.maturityDate,
         depositType: formData.depositType || 'FD',
-        startDate: formData.depositType === 'RD' ? formData.startDate : undefined
+        startDate: formData.depositType === 'RD' ? formData.startDate : undefined,
+        savingsAccountId: formData.depositType === 'RD' ? formData.savingsAccountId : undefined
       });
     } else if (type === 'stock') {
       addStock({
@@ -134,10 +135,29 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
             <Input id="interestRate" type="number" step="0.01" value={formData.interestRate || ''} onChange={(e) => setFormData({ ...formData, interestRate: e.target.value })} required />
           </div>
           {formData.depositType === 'RD' && (
-            <div className="space-y-2">
-              <Label htmlFor="startDate">RD Start Date</Label>
-              <Input id="startDate" type="date" value={formData.startDate || ''} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} required />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="startDate">RD Start Date</Label>
+                <Input id="startDate" type="date" value={formData.startDate || ''} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="savingsAccountId">Linked Bank Account (for auto-deduction)</Label>
+                <Select value={formData.savingsAccountId || ''} onValueChange={(value) => setFormData({ ...formData, savingsAccountId: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select bank account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No account linked</SelectItem>
+                    {savingsAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.bankName} - ****{account.accountNumber.slice(-4)} (₹{account.balance.toLocaleString('en-IN')})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Monthly installment will be auto-deducted from this account</p>
+              </div>
+            </>
           )}
           <div className="space-y-2">
             <Label htmlFor="maturityDate">Maturity Date</Label>

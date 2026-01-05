@@ -31,6 +31,8 @@ export interface FixedDeposit {
   maturityDate: string;
   depositType: 'FD' | 'RD'; // FD = Fixed Deposit, RD = Recurring Deposit
   startDate?: string; // When the RD actually started (for RDs)
+  savingsAccountId?: string; // Linked savings account for automatic deductions (for RDs)
+  lastDeductionDate?: string;
   createdAt?: string;
   updatedAt?: string;
 }
