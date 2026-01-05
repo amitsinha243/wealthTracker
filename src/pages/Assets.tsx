@@ -24,7 +24,21 @@ const Assets = () => {
 
   const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalMutualFunds = mutualFunds.reduce((sum, fund) => sum + (fund.units * fund.nav), 0);
-  const totalFixedDeposits = fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0);
+  
+  // Calculate total RD amount as (monthly installment × total months)
+  const totalFixedDeposits = fixedDeposits.reduce((sum, fd) => {
+    if (fd.depositType === 'RD') {
+      const startDate = new Date(fd.startDate || fd.createdAt || new Date());
+      const maturityDate = new Date(fd.maturityDate);
+      const totalMonths = Math.max(1,
+        (maturityDate.getFullYear() - startDate.getFullYear()) * 12 +
+        (maturityDate.getMonth() - startDate.getMonth())
+      );
+      return sum + (fd.amount * totalMonths);
+    }
+    return sum + fd.amount;
+  }, 0);
+  
   const totalStocks = stocks.reduce((sum, stock) => sum + (stock.quantity * stock.purchasePrice), 0);
 
   return (
@@ -71,16 +85,22 @@ const Assets = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {fixedDeposits.map((fd) => {
-                const years = (new Date(fd.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
+                const startDate = new Date(fd.startDate || fd.createdAt || new Date());
+                const maturityDate = new Date(fd.maturityDate);
+                const years = (maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
+                const totalMonths = Math.max(1,
+                  (maturityDate.getFullYear() - startDate.getFullYear()) * 12 +
+                  (maturityDate.getMonth() - startDate.getMonth())
+                );
                 let maturityAmount: number;
+                const totalPrincipal = fd.depositType === 'RD' ? fd.amount * totalMonths : fd.amount;
                 
                 if (fd.depositType === 'RD') {
-                  const months = Math.max(0, Math.ceil(years * 12));
                   const monthlyRate = fd.interestRate / 100 / 12;
                   if (monthlyRate === 0) {
-                    maturityAmount = fd.amount * months;
+                    maturityAmount = fd.amount * totalMonths;
                   } else {
-                    maturityAmount = fd.amount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+                    maturityAmount = fd.amount * ((Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) * (1 + monthlyRate);
                   }
                 } else {
                   maturityAmount = fd.amount * Math.pow(1 + fd.interestRate / 100, years);
@@ -101,6 +121,12 @@ const Assets = () => {
                         </span>
                         <span className="font-semibold">₹{fd.amount.toLocaleString('en-IN')}</span>
                       </div>
+                      {fd.depositType === 'RD' && (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Total Investment:</span>
+                          <span className="font-semibold">₹{totalPrincipal.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Interest Rate:</span>
                         <span className="font-semibold">{fd.interestRate}%</span>

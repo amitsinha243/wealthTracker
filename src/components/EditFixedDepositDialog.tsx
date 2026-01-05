@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { FixedDeposit } from "@/hooks/useAssets";
+import { FixedDeposit, useAssets } from "@/hooks/useAssets";
 
 interface EditFixedDepositDialogProps {
   open: boolean;
@@ -20,12 +20,14 @@ export const EditFixedDepositDialog = ({
   deposit,
   onUpdate 
 }: EditFixedDepositDialogProps) => {
+  const { savingsAccounts } = useAssets();
   const [bankName, setBankName] = useState(deposit.bankName);
   const [amount, setAmount] = useState(deposit.amount.toString());
   const [interestRate, setInterestRate] = useState(deposit.interestRate.toString());
   const [maturityDate, setMaturityDate] = useState(deposit.maturityDate);
   const [depositType, setDepositType] = useState<'FD' | 'RD'>(deposit.depositType || 'FD');
   const [startDate, setStartDate] = useState(deposit.startDate || '');
+  const [savingsAccountId, setSavingsAccountId] = useState(deposit.savingsAccountId || '');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +41,8 @@ export const EditFixedDepositDialog = ({
         interestRate: parseFloat(interestRate),
         maturityDate,
         depositType,
-        startDate: depositType === 'RD' ? startDate : undefined
+        startDate: depositType === 'RD' ? startDate : undefined,
+        savingsAccountId: depositType === 'RD' ? (savingsAccountId || undefined) : undefined
       });
       
       toast.success("Deposit updated successfully!");
@@ -53,7 +56,7 @@ export const EditFixedDepositDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Deposit</DialogTitle>
         </DialogHeader>
@@ -102,16 +105,35 @@ export const EditFixedDepositDialog = ({
             />
           </div>
           {depositType === 'RD' && (
-            <div>
-              <Label htmlFor="startDate">RD Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-              />
-            </div>
+            <>
+              <div>
+                <Label htmlFor="startDate">RD Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="savingsAccountId">Linked Bank Account (for auto-deduction)</Label>
+                <Select value={savingsAccountId} onValueChange={setSavingsAccountId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select bank account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No account linked</SelectItem>
+                    {savingsAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.bankName} - ****{account.accountNumber.slice(-4)} (₹{account.balance.toLocaleString('en-IN')})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Monthly installment will be auto-deducted from this account</p>
+              </div>
+            </>
           )}
           <div>
             <Label htmlFor="maturityDate">Maturity Date</Label>

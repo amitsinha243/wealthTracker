@@ -141,7 +141,21 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
     return Math.round((elapsed / totalDuration) * 100);
   };
 
-  const totalPrincipal = deposits.reduce((sum, fd) => sum + getCurrentDepositedAmount(fd), 0);
+  // Calculate total principal for display (for RD: monthly × total months)
+  const getTotalPrincipal = (fd: FixedDeposit) => {
+    if (fd.depositType === 'RD') {
+      const startDate = new Date(fd.startDate || fd.createdAt || new Date());
+      const maturityDate = new Date(fd.maturityDate);
+      const totalMonths = Math.max(1,
+        (maturityDate.getFullYear() - startDate.getFullYear()) * 12 +
+        (maturityDate.getMonth() - startDate.getMonth())
+      );
+      return fd.amount * totalMonths;
+    }
+    return fd.amount;
+  };
+
+  const totalPrincipal = deposits.reduce((sum, fd) => sum + getTotalPrincipal(fd), 0);
   const totalMaturityAmount = deposits.reduce((sum, fd) => sum + calculateMaturityAmount(fd), 0);
 
   return (
@@ -166,6 +180,7 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
           const installments = fd.depositType === 'RD' ? generateInstallmentHistory(fd) : [];
           const isExpanded = expandedHistoryId === fd.id;
           const rdProgress = fd.depositType === 'RD' ? getRDProgress(fd) : 0;
+          const totalRDPrincipal = getTotalPrincipal(fd);
           
           return (
             <Card 
@@ -193,9 +208,14 @@ export const FixedDepositDetails = ({ deposits, onUpdate, onDelete }: FixedDepos
                     </p>
                     <p className="text-lg font-bold text-foreground">₹{fd.amount.toLocaleString('en-IN')}</p>
                     {fd.depositType === 'RD' && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Deposited so far: <span className="font-semibold text-foreground">₹{getCurrentDepositedAmount(fd).toLocaleString('en-IN')}</span>
-                      </p>
+                      <>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Total Investment: <span className="font-semibold text-foreground">₹{totalRDPrincipal.toLocaleString('en-IN')}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Deposited so far: <span className="font-semibold text-foreground">₹{getCurrentDepositedAmount(fd).toLocaleString('en-IN')}</span>
+                        </p>
+                      </>
                     )}
                   </div>
                   <div>
