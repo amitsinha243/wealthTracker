@@ -27,7 +27,7 @@ export const EditFixedDepositDialog = ({
   const [maturityDate, setMaturityDate] = useState(deposit.maturityDate);
   const [depositType, setDepositType] = useState<'FD' | 'RD'>(deposit.depositType || 'FD');
   const [startDate, setStartDate] = useState(deposit.startDate || '');
-  const [savingsAccountId, setSavingsAccountId] = useState(deposit.savingsAccountId || '');
+  const [savingsAccountId, setSavingsAccountId] = useState(deposit.savingsAccountId || 'none');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +42,7 @@ export const EditFixedDepositDialog = ({
         maturityDate,
         depositType,
         startDate: depositType === 'RD' ? startDate : undefined,
-        savingsAccountId: depositType === 'RD' ? (savingsAccountId || undefined) : undefined
+        savingsAccountId: depositType === 'RD' ? (savingsAccountId === 'none' ? undefined : savingsAccountId) : undefined
       });
       
       toast.success("Deposit updated successfully!");
@@ -123,7 +123,7 @@ export const EditFixedDepositDialog = ({
                     <SelectValue placeholder="Select bank account" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No account linked</SelectItem>
+                    <SelectItem value="none">No account linked</SelectItem>
                     {savingsAccounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.bankName} - ****{account.accountNumber.slice(-4)} (₹{account.balance.toLocaleString('en-IN')})
