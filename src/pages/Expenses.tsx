@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wallet, ArrowLeft, Receipt, Trash2, Pencil, Filter, X } from "lucide-react";
+import { Wallet, ArrowLeft, Receipt, Trash2, Pencil, Filter, X, CalendarIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useAssets } from "@/hooks/useAssets";
@@ -10,6 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Footer } from "@/components/Footer";
 import { EditExpenseDialog } from "@/components/EditExpenseDialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -48,6 +52,8 @@ const Expenses = () => {
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("this-month");
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
 
   // Helper to get bank name from savings account ID
   const getBankName = (savingsAccountId?: string) => {
@@ -97,6 +103,14 @@ const Expenses = () => {
             return expDate >= sixMonthsAgo;
           case "this-year":
             return expYear === currentYear;
+          case "custom":
+            if (customStartDate && expDate < customStartDate) return false;
+            if (customEndDate) {
+              const endOfDay = new Date(customEndDate);
+              endOfDay.setHours(23, 59, 59, 999);
+              if (expDate > endOfDay) return false;
+            }
+            return true;
           default:
             return true;
         }
@@ -104,7 +118,7 @@ const Expenses = () => {
     }
     
     return filtered;
-  }, [expenses, categoryFilter, dateRangeFilter]);
+  }, [expenses, categoryFilter, dateRangeFilter, customStartDate, customEndDate]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -136,6 +150,16 @@ const Expenses = () => {
   const clearFilters = () => {
     setCategoryFilter("all");
     setDateRangeFilter("all");
+    setCustomStartDate(undefined);
+    setCustomEndDate(undefined);
+  };
+
+  const handleDateRangeChange = (value: string) => {
+    setDateRangeFilter(value);
+    if (value !== "custom") {
+      setCustomStartDate(undefined);
+      setCustomEndDate(undefined);
+    }
   };
 
   const handleDelete = () => {
@@ -199,7 +223,7 @@ const Expenses = () => {
                 </SelectContent>
               </Select>
               
-              <Select value={dateRangeFilter} onValueChange={setDateRangeFilter}>
+              <Select value={dateRangeFilter} onValueChange={handleDateRangeChange}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Date Range" />
                 </SelectTrigger>
@@ -210,8 +234,62 @@ const Expenses = () => {
                   <SelectItem value="last-3-months">Last 3 Months</SelectItem>
                   <SelectItem value="last-6-months">Last 6 Months</SelectItem>
                   <SelectItem value="this-year">This Year</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
                 </SelectContent>
               </Select>
+              
+              {dateRangeFilter === "custom" && (
+                <>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[150px] justify-start text-left font-normal",
+                          !customStartDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {customStartDate ? format(customStartDate, "dd MMM yyyy") : "Start date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customStartDate}
+                        onSelect={setCustomStartDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[150px] justify-start text-left font-normal",
+                          !customEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {customEndDate ? format(customEndDate, "dd MMM yyyy") : "End date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customEndDate}
+                        onSelect={setCustomEndDate}
+                        disabled={(date) => customStartDate ? date < customStartDate : false}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </>
+              )}
               
               {isFiltered && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
