@@ -47,7 +47,7 @@ const Expenses = () => {
   
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
+  const [dateRangeFilter, setDateRangeFilter] = useState<string>("this-month");
 
   // Helper to get bank name from savings account ID
   const getBankName = (savingsAccountId?: string) => {
