@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wallet, ArrowLeft, Receipt, Trash2, Pencil } from "lucide-react";
+import { Wallet, ArrowLeft, Receipt, Trash2, Pencil, Filter, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useAssets } from "@/hooks/useAssets";
@@ -10,6 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Footer } from "@/components/Footer";
 import { EditExpenseDialog } from "@/components/EditExpenseDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -37,6 +44,10 @@ const Expenses = () => {
   const { savingsAccounts } = useAssets();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
+  
+  // Filter states
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
 
   // Helper to get bank name from savings account ID
   const getBankName = (savingsAccountId?: string) => {
@@ -44,6 +55,56 @@ const Expenses = () => {
     const account = savingsAccounts.find(acc => acc.id === savingsAccountId);
     return account ? account.bankName : '-';
   };
+
+  // Get unique categories from expenses
+  const categories = useMemo(() => {
+    const uniqueCategories = [...new Set(expenses.map(exp => exp.category))];
+    return uniqueCategories.sort();
+  }, [expenses]);
+
+  // Filter expenses based on selected filters
+  const filteredExpenses = useMemo(() => {
+    let filtered = [...expenses];
+    
+    // Category filter
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(exp => exp.category === categoryFilter);
+    }
+    
+    // Date range filter
+    if (dateRangeFilter !== "all") {
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      
+      filtered = filtered.filter(exp => {
+        const expDate = new Date(exp.date);
+        const expMonth = expDate.getMonth();
+        const expYear = expDate.getFullYear();
+        
+        switch (dateRangeFilter) {
+          case "this-month":
+            return expMonth === currentMonth && expYear === currentYear;
+          case "last-month":
+            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            return expMonth === lastMonth && expYear === lastMonthYear;
+          case "last-3-months":
+            const threeMonthsAgo = new Date(currentYear, currentMonth - 2, 1);
+            return expDate >= threeMonthsAgo;
+          case "last-6-months":
+            const sixMonthsAgo = new Date(currentYear, currentMonth - 5, 1);
+            return expDate >= sixMonthsAgo;
+          case "this-year":
+            return expYear === currentYear;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    return filtered;
+  }, [expenses, categoryFilter, dateRangeFilter]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -54,9 +115,11 @@ const Expenses = () => {
   if (loading || !user) return null;
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const filteredTotal = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const isFiltered = categoryFilter !== "all" || dateRangeFilter !== "all";
   
-  // Sort expenses by date (most recent first)
-  const sortedExpenses = [...expenses].sort((a, b) => 
+  // Sort filtered expenses by date (most recent first)
+  const sortedExpenses = [...filteredExpenses].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
@@ -69,6 +132,11 @@ const Expenses = () => {
     acc[monthYear].push(expense);
     return acc;
   }, {} as Record<string, typeof expenses>);
+
+  const clearFilters = () => {
+    setCategoryFilter("all");
+    setDateRangeFilter("all");
+  };
 
   const handleDelete = () => {
     if (deleteId) {
@@ -107,13 +175,72 @@ const Expenses = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Filters */}
       <main className="container mx-auto px-4 py-8">
-        {expenses.length === 0 ? (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Filters:</span>
+              </div>
+              
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={dateRangeFilter} onValueChange={setDateRangeFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Date Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="this-month">This Month</SelectItem>
+                  <SelectItem value="last-month">Last Month</SelectItem>
+                  <SelectItem value="last-3-months">Last 3 Months</SelectItem>
+                  <SelectItem value="last-6-months">Last 6 Months</SelectItem>
+                  <SelectItem value="this-year">This Year</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {isFiltered && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="h-4 w-4 mr-1" />
+                  Clear Filters
+                </Button>
+              )}
+              
+              {isFiltered && (
+                <Badge variant="default" className="ml-auto text-base px-4 py-2">
+                  Filtered Total: ₹{filteredTotal.toLocaleString('en-IN')}
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {sortedExpenses.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Receipt className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">No expenses recorded yet</p>
+              <p className="text-muted-foreground">
+                {isFiltered ? "No expenses match the selected filters" : "No expenses recorded yet"}
+              </p>
+              {isFiltered && (
+                <Button variant="link" onClick={clearFilters} className="mt-2">
+                  Clear filters
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
