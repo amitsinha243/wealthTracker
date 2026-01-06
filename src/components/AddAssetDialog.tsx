@@ -43,7 +43,7 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
         maturityDate: formData.maturityDate,
         depositType: formData.depositType || 'FD',
         startDate: formData.depositType === 'RD' ? formData.startDate : undefined,
-        savingsAccountId: formData.depositType === 'RD' ? formData.savingsAccountId : undefined
+        savingsAccountId: formData.depositType === 'RD' ? (formData.savingsAccountId === 'none' ? undefined : formData.savingsAccountId) : undefined
       });
     } else if (type === 'stock') {
       addStock({
@@ -147,7 +147,7 @@ export const AddAssetDialog = ({ open, onOpenChange, type }: AddAssetDialogProps
                     <SelectValue placeholder="Select bank account" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No account linked</SelectItem>
+                    <SelectItem value="none">No account linked</SelectItem>
                     {savingsAccounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.bankName} - ****{account.accountNumber.slice(-4)} (₹{account.balance.toLocaleString('en-IN')})
