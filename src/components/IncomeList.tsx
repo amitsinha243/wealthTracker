@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, Filter } from "lucide-react";
 import { useIncome, Income } from "@/hooks/useIncome";
 import { EditIncomeDialog } from "@/components/EditIncomeDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +29,32 @@ export const IncomeList = () => {
   const { incomes, deleteIncome } = useIncome();
   const [editIncome, setEditIncome] = useState<Income | null>(null);
   const [deleteIncomeId, setDeleteIncomeId] = useState<string | null>(null);
+  const [monthFilter, setMonthFilter] = useState<string>("all");
+
+  // Get unique months from incomes
+  const availableMonths = useMemo(() => {
+    const months = new Map<string, string>();
+    incomes.forEach(income => {
+      const date = new Date(income.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      months.set(key, label);
+    });
+    return Array.from(months.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [incomes]);
+
+  // Filter incomes based on selected month
+  const filteredIncomes = useMemo(() => {
+    if (monthFilter === "all") return incomes;
+    
+    return incomes.filter(income => {
+      const date = new Date(income.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      return key === monthFilter;
+    });
+  }, [incomes, monthFilter]);
+
+  const filteredTotal = filteredIncomes.reduce((sum, inc) => sum + inc.amount, 0);
 
   const handleDelete = async () => {
     if (!deleteIncomeId) return;
@@ -36,7 +69,7 @@ export const IncomeList = () => {
   };
 
   // Sort incomes by date (most recent first)
-  const sortedIncomes = [...incomes].sort((a, b) => 
+  const sortedIncomes = [...filteredIncomes].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
@@ -52,6 +85,41 @@ export const IncomeList = () => {
 
   return (
     <>
+      {/* Filter Section */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Filter:</span>
+        </div>
+        
+        <Select value={monthFilter} onValueChange={setMonthFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select month" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Time</SelectItem>
+            {availableMonths.map(([key, label]) => (
+              <SelectItem key={key} value={key}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        {monthFilter !== "all" && (
+          <Badge variant="default" className="ml-auto">
+            Total: ₹{filteredTotal.toLocaleString('en-IN')}
+          </Badge>
+        )}
+      </div>
+
+      {sortedIncomes.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            No income entries for selected month.
+          </CardContent>
+        </Card>
+      ) : (
       <ScrollArea className="max-h-96">
         <div className="space-y-2">
           {sortedIncomes.map((income) => (
@@ -100,6 +168,7 @@ export const IncomeList = () => {
           ))}
         </div>
       </ScrollArea>
+      )}
 
       {/* Edit Income Dialog */}
       {editIncome && (
