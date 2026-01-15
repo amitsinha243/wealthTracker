@@ -51,6 +51,7 @@ const Expenses = () => {
   
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [bankAccountFilter, setBankAccountFilter] = useState<string>("all");
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("this-month");
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
@@ -68,6 +69,12 @@ const Expenses = () => {
     return uniqueCategories.sort();
   }, [expenses]);
 
+  // Get unique bank accounts from expenses (that have a savingsAccountId)
+  const bankAccounts = useMemo(() => {
+    const accountIds = [...new Set(expenses.map(exp => exp.savingsAccountId).filter(Boolean))];
+    return savingsAccounts.filter(acc => accountIds.includes(acc.id));
+  }, [expenses, savingsAccounts]);
+
   // Filter expenses based on selected filters
   const filteredExpenses = useMemo(() => {
     let filtered = [...expenses];
@@ -75,6 +82,11 @@ const Expenses = () => {
     // Category filter
     if (categoryFilter !== "all") {
       filtered = filtered.filter(exp => exp.category === categoryFilter);
+    }
+    
+    // Bank account filter
+    if (bankAccountFilter !== "all") {
+      filtered = filtered.filter(exp => exp.savingsAccountId === bankAccountFilter);
     }
     
     // Date range filter
@@ -118,7 +130,7 @@ const Expenses = () => {
     }
     
     return filtered;
-  }, [expenses, categoryFilter, dateRangeFilter, customStartDate, customEndDate]);
+  }, [expenses, categoryFilter, bankAccountFilter, dateRangeFilter, customStartDate, customEndDate]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -130,7 +142,7 @@ const Expenses = () => {
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const filteredTotal = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const isFiltered = categoryFilter !== "all" || dateRangeFilter !== "all";
+  const isFiltered = categoryFilter !== "all" || bankAccountFilter !== "all" || dateRangeFilter !== "all";
   
   // Sort filtered expenses by date (most recent first)
   const sortedExpenses = [...filteredExpenses].sort((a, b) => 
@@ -149,6 +161,7 @@ const Expenses = () => {
 
   const clearFilters = () => {
     setCategoryFilter("all");
+    setBankAccountFilter("all");
     setDateRangeFilter("all");
     setCustomStartDate(undefined);
     setCustomEndDate(undefined);
@@ -218,6 +231,20 @@ const Expenses = () => {
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={bankAccountFilter} onValueChange={setBankAccountFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Bank Account" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Accounts</SelectItem>
+                  {bankAccounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.bankName}
                     </SelectItem>
                   ))}
                 </SelectContent>
