@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wallet, ArrowLeft, Receipt, Trash2, Pencil, Filter, X, CalendarIcon } from "lucide-react";
+import { Wallet, ArrowLeft, Receipt, Trash2, Pencil, Filter, X, CalendarIcon, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useAssets } from "@/hooks/useAssets";
@@ -183,6 +183,38 @@ const Expenses = () => {
     }
   };
 
+  const exportToCSV = () => {
+    if (filteredExpenses.length === 0) {
+      toast.error("No expenses to export");
+      return;
+    }
+
+    const headers = ["Date", "Category", "Description", "Bank Account", "Amount"];
+    const rows = filteredExpenses.map(exp => [
+      format(new Date(exp.date), "yyyy-MM-dd"),
+      exp.category,
+      exp.description || "",
+      getBankName(exp.savingsAccountId),
+      exp.amount.toString()
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `expenses_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Expenses exported successfully");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -325,8 +357,13 @@ const Expenses = () => {
                 </Button>
               )}
               
+              <Button variant="outline" size="sm" onClick={exportToCSV} className="ml-auto">
+                <Download className="h-4 w-4 mr-1" />
+                Export CSV
+              </Button>
+              
               {isFiltered && (
-                <Badge variant="default" className="ml-auto text-base px-4 py-2">
+                <Badge variant="default" className="text-base px-4 py-2">
                   Filtered Total: ₹{filteredTotal.toLocaleString('en-IN')}
                 </Badge>
               )}
