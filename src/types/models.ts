@@ -64,6 +64,7 @@ export const EXPENSE_CATEGORIES = [
   'Coco',
   'Credit Card Bills',
   'Utilities',
+  'Food',
   'Public Transport',
   'Healthcare',
   'Education',
