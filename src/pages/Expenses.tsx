@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wallet, ArrowLeft, Receipt, Trash2, Pencil, Filter, X, CalendarIcon, Download } from "lucide-react";
+import { Wallet, ArrowLeft, Receipt, Trash2, Pencil, Filter, X, CalendarIcon, Download, Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useAssets } from "@/hooks/useAssets";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Footer } from "@/components/Footer";
 import { EditExpenseDialog } from "@/components/EditExpenseDialog";
+import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ const Expenses = () => {
   const { savingsAccounts } = useAssets();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
+  const [showAddExpense, setShowAddExpense] = useState(false);
   
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -235,6 +237,10 @@ const Expenses = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button onClick={() => setShowAddExpense(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Expense
+              </Button>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 Total: ₹{totalExpenses.toLocaleString('en-IN')}
               </Badge>
@@ -483,6 +489,11 @@ const Expenses = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddExpenseDialog 
+        open={showAddExpense}
+        onOpenChange={setShowAddExpense}
+      />
     </div>
   );
 };
