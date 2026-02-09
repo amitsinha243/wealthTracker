@@ -237,7 +237,7 @@ export const TripDetails = ({ trip, onClose }: TripDetailsProps) => {
           </Button>
         </div>
 
-        <ScrollArea className="max-h-96">
+        <div>
           {expenses.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
@@ -287,7 +287,7 @@ export const TripDetails = ({ trip, onClose }: TripDetailsProps) => {
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Add Expense Dialog */}
