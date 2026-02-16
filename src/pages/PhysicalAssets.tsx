@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Home, ArrowLeft, Plus, Trash2, Pencil, Car, Building, Gem, Smartphone, Sofa, Bike, Package } from "lucide-react";
+import { Home, ArrowLeft, Plus, Trash2, Pencil, Car, Building, Gem, Smartphone, Sofa, Bike, Package, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePhysicalAssets, PhysicalAsset } from "@/hooks/usePhysicalAssets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { NavigationMenu } from "@/components/NavigationMenu";
 import { Footer } from "@/components/Footer";
 import { AddPhysicalAssetDialog } from "@/components/AddPhysicalAssetDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AssetDocuments } from "@/components/AssetDocuments";
 import { toast } from "sonner";
 
 const getAssetIcon = (type: string) => {
@@ -30,6 +31,7 @@ const PhysicalAssets = () => {
   const { assets, loading: assetsLoading, addAsset, deleteAsset } = usePhysicalAssets();
   const [showAdd, setShowAdd] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [expandedAssetId, setExpandedAssetId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate('/auth');
@@ -179,7 +181,23 @@ const PhysicalAssets = () => {
                     {asset.description && (
                       <p className="text-xs text-muted-foreground pt-1">{asset.description}</p>
                     )}
+                    <div className="pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setExpandedAssetId(expandedAssetId === asset.id ? null : asset.id)}
+                      >
+                        <FileText className="h-4 w-4 mr-1" />
+                        {expandedAssetId === asset.id ? 'Hide Documents' : 'View Documents'}
+                      </Button>
+                    </div>
                   </CardContent>
+                  {expandedAssetId === asset.id && (
+                    <div className="px-4 pb-4">
+                      <AssetDocuments assetId={asset.id} assetName={asset.assetName} />
+                    </div>
+                  )}
                 </Card>
               );
             })}
