@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, Plus, Edit, Trash2 } from "lucide-react";
+import { TrendingUp, Plus, Edit, Trash2, BarChart2, Hash, CalendarDays } from "lucide-react";
 import { MutualFund } from "@/hooks/useAssets";
-import { AddMutualFundUnitsDialog } from './AddMutualFundUnitsDialog';
-import { EditMutualFundDialog } from './EditMutualFundDialog';
+import { AddMutualFundUnitsDialog } from "./AddMutualFundUnitsDialog";
+import { EditMutualFundDialog } from "./EditMutualFundDialog";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -25,6 +24,14 @@ interface MutualFundDetailsProps {
   onDelete: (id: string) => Promise<void>;
 }
 
+const FUND_COLORS = [
+  { bg: "from-blue-600 to-indigo-500", light: "#3b82f614", border: "#3b82f630", text: "#3b82f6" },
+  { bg: "from-violet-600 to-purple-400", light: "#8b5cf614", border: "#8b5cf630", text: "#8b5cf6" },
+  { bg: "from-emerald-600 to-teal-400", light: "#10b98114", border: "#10b98130", text: "#10b981" },
+  { bg: "from-amber-600 to-yellow-400", light: "#f59e0b14", border: "#f59e0b30", text: "#f59e0b" },
+  { bg: "from-rose-600 to-pink-400", light: "#f43f5e14", border: "#f43f5e30", text: "#f43f5e" },
+];
+
 export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: MutualFundDetailsProps) => {
   const [selectedFund, setSelectedFund] = useState<any>(null);
   const [showAddUnitsDialog, setShowAddUnitsDialog] = useState(false);
@@ -38,100 +45,158 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
 
   const handleDelete = async () => {
     if (!deleteFundId) return;
-    
     try {
       await onDelete(deleteFundId);
       toast.success("Mutual fund deleted successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete mutual fund");
     } finally {
       setDeleteFundId(null);
     }
   };
+
   if (funds.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        No mutual funds added yet. Click "Add Mutual Fund" to get started.
+      <div className="flex flex-col items-center justify-center py-14 text-muted-foreground gap-3">
+        <BarChart2 className="h-10 w-10 opacity-20" />
+        <p className="text-sm">No mutual funds added yet.</p>
       </div>
     );
   }
 
-  const totalValue = funds.reduce((sum, fund) => sum + (fund.units * fund.nav), 0);
+  const totalValue = funds.reduce((sum, f) => sum + f.units * f.nav, 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between pb-4 border-b border-border">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Mutual Funds</h3>
-          <p className="text-sm text-muted-foreground">{funds.length} active investments</p>
+    <div className="space-y-5">
+      {/* Section header */}
+      <div className="flex items-center justify-between pb-4 border-b border-border/60">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-blue-500/10">
+            <BarChart2 className="h-5 w-5 text-blue-500" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-foreground">Mutual Funds</h3>
+            <p className="text-xs text-muted-foreground">{funds.length} active investment{funds.length !== 1 ? "s" : ""}</p>
+          </div>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-foreground">₹{totalValue.toLocaleString('en-IN')}</p>
+          <p className="text-xs text-muted-foreground mb-0.5">Total Value</p>
+          <p className="text-2xl font-bold text-foreground">₹{totalValue.toLocaleString("en-IN")}</p>
         </div>
       </div>
 
+      {/* Fund cards */}
       <div className="space-y-3">
-        {funds.map((fund) => {
+        {funds.map((fund, idx) => {
+          const palette = FUND_COLORS[idx % FUND_COLORS.length];
           const currentValue = fund.units * fund.nav;
-          
+          const sharePercent = totalValue > 0 ? (currentValue / totalValue) * 100 : 0;
+
           return (
-            <Card 
+            <div
               key={fund.id}
-              className="p-4 hover:shadow-md transition-all duration-300 border-border/50 bg-gradient-to-br from-card to-secondary/20"
+              className="rounded-2xl border border-border/50 overflow-hidden hover:shadow-lg transition-all duration-300 bg-card"
             >
-              <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="font-semibold text-foreground">{fund.fundName}</h4>
-                    <p className="text-sm text-muted-foreground">{fund.schemeName}</p>
+              {/* Coloured top strip */}
+              <div className={`h-1.5 w-full bg-gradient-to-r ${palette.bg}`} />
+
+              <div className="p-4 space-y-3">
+                {/* Fund name & value */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${palette.bg} flex-shrink-0`}>
+                      <TrendingUp className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-foreground leading-tight truncate">{fund.fundName}</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{fund.schemeName}</p>
+                    </div>
+                  </div>
+                  <p className="text-xl font-bold text-foreground whitespace-nowrap">
+                    ₹{currentValue.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                  </p>
+                </div>
+
+                {/* Stat grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div
+                    className="rounded-xl p-2.5 text-center"
+                    style={{ background: palette.light, border: `1px solid ${palette.border}` }}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Hash className="h-3 w-3" style={{ color: palette.text }} />
+                      <span className="text-xs text-muted-foreground">Units</span>
+                    </div>
+                    <p className="text-sm font-bold" style={{ color: palette.text }}>{fund.units.toFixed(3)}</p>
+                  </div>
+                  <div
+                    className="rounded-xl p-2.5 text-center"
+                    style={{ background: palette.light, border: `1px solid ${palette.border}` }}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <BarChart2 className="h-3 w-3" style={{ color: palette.text }} />
+                      <span className="text-xs text-muted-foreground">NAV</span>
+                    </div>
+                    <p className="text-sm font-bold" style={{ color: palette.text }}>₹{fund.nav.toFixed(2)}</p>
+                  </div>
+                  <div
+                    className="rounded-xl p-2.5 text-center"
+                    style={{ background: palette.light, border: `1px solid ${palette.border}` }}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <CalendarDays className="h-3 w-3" style={{ color: palette.text }} />
+                      <span className="text-xs text-muted-foreground">Since</span>
+                    </div>
+                    <p className="text-xs font-bold" style={{ color: palette.text }}>
+                      {new Date(fund.purchaseDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })}
+                    </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Current Value</p>
-                    <p className="text-lg font-bold text-foreground">₹{currentValue.toLocaleString('en-IN')}</p>
+                {/* Share bar + badge */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Portfolio share</span>
+                    <Badge variant="secondary" className="text-xs">{sharePercent.toFixed(1)}%</Badge>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Units</p>
-                    <p className="text-sm font-medium text-foreground">{fund.units.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">NAV</p>
-                    <p className="text-sm font-medium text-foreground">₹{fund.nav.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Purchase Date</p>
-                    <p className="text-sm font-medium text-foreground">{new Date(fund.purchaseDate).toLocaleDateString('en-IN')}</p>
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${palette.bg} transition-all duration-700`}
+                      style={{ width: `${sharePercent}%` }}
+                    />
                   </div>
                 </div>
-                <div className="flex gap-2 mt-4">
-                  <Button 
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-1">
+                  <Button
                     onClick={() => handleAddUnits(fund)}
-                    className="flex-1"
+                    className="flex-1 h-8 text-xs"
                     variant="outline"
                     size="sm"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-3.5 w-3.5 mr-1.5" />
                     Add Units
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-8 px-3"
                     onClick={() => setEditFund(fund)}
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
+                    className="h-8 px-3"
                     onClick={() => setDeleteFundId(fund.id)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           );
         })}
       </div>
@@ -141,9 +206,7 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
           open={showAddUnitsDialog}
           onOpenChange={setShowAddUnitsDialog}
           mutualFund={selectedFund}
-          onSuccess={() => {
-            onRefresh?.();
-          }}
+          onSuccess={() => onRefresh?.()}
         />
       )}
 

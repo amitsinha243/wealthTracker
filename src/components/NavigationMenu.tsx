@@ -49,12 +49,12 @@ export const NavigationMenu = () => {
               Physical Assets
             </Link>
           </Button>
-          {/* <Button variant="outline" className="justify-start" asChild>
+          <Button variant="outline" className="justify-start" asChild>
             <Link to="/ai-assistant">
               <Bot className="h-5 w-5 mr-2" />
               AI Assistant
             </Link>
-          </Button> */}
+          </Button>
           <Button variant="outline" className="justify-start" onClick={logout}>
             <LogOut className="h-5 w-5 mr-2" />
             Logout

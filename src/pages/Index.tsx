@@ -24,11 +24,13 @@ type AssetType = 'savings' | 'mutualfunds' | 'fixeddeposits' | 'stocks' | null;
 const Index = () => {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
-  const { 
-    savingsAccounts, 
-    mutualFunds, 
-    fixedDeposits, 
+  const {
+    savingsAccounts,
+    mutualFunds,
+    fixedDeposits,
     stocks,
+    mutualFundTransactions,
+    stockTransactions,
     fetchAssets,
     updateSavingsAccount,
     updateMutualFund,
@@ -56,7 +58,7 @@ const Index = () => {
   const currentYear = new Date().getFullYear();
   const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-  
+
   const getMonthlyAddition = (assets: any[], month: number, year: number, amountKey?: string) => {
     return assets
       .filter(asset => {
@@ -68,11 +70,10 @@ const Index = () => {
         if (amountKey) {
           return sum + (asset[amountKey] || 0);
         }
-        // For mutual funds
+        // For mutual funds/stocks (backward compatibility if no transactions)
         if (asset.units && asset.nav) {
           return sum + (asset.units * asset.nav);
         }
-        // For stocks
         if (asset.quantity && asset.purchasePrice) {
           return sum + (asset.quantity * asset.purchasePrice);
         }
@@ -80,15 +81,64 @@ const Index = () => {
       }, 0);
   };
 
-  const monthlyFixedDeposits = getMonthlyAddition(fixedDeposits, currentMonth, currentYear, 'amount');
-  const monthlyMutualFunds = getMonthlyAddition(mutualFunds, currentMonth, currentYear);
-  const monthlySavings = getMonthlyAddition(savingsAccounts, currentMonth, currentYear, 'balance');
-  const monthlyStocks = getMonthlyAddition(stocks, currentMonth, currentYear);
+  /**
+   * Computes additions from transaction records for MF and Stocks.
+   */
+  const getMonthlyTransactionAddition = (transactions: any[], month: number, year: number, type: 'MF' | 'Stock') => {
+    return transactions
+      .filter(tx => {
+        const txDate = new Date(tx.purchaseDate || tx.createdAt);
+        return txDate.getMonth() === month && txDate.getFullYear() === year;
+      })
+      .reduce((sum, tx) => {
+        if (type === 'MF') {
+          return sum + (tx.units * tx.nav);
+        } else {
+          return sum + (tx.quantity * tx.purchasePrice);
+        }
+      }, 0);
+  };
 
-  const prevMonthFixedDeposits = getMonthlyAddition(fixedDeposits, previousMonth, previousYear, 'amount');
-  const prevMonthMutualFunds = getMonthlyAddition(mutualFunds, previousMonth, previousYear);
+  /**
+   * Computes fixed-deposit additions for a given month+year.
+   * - FD: counted once in the month it was created (like before).
+   * - RD: counted every month the RD is actively running (startDate → maturityDate),
+   *       because a monthly instalment is invested each of those months.
+   */
+  const getMonthlyFDAddition = (deposits: any[], month: number, year: number): number => {
+    return deposits.reduce((sum, fd) => {
+      if (fd.depositType === 'RD') {
+        // Active if target month is within [startDate, maturityDate)
+        const start = new Date(fd.startDate || fd.createdAt || new Date());
+        const maturity = new Date(fd.maturityDate);
+        const targetFirst = new Date(year, month, 1);
+        const startFirst = new Date(start.getFullYear(), start.getMonth(), 1);
+        const maturityFirst = new Date(maturity.getFullYear(), maturity.getMonth(), 1);
+        if (targetFirst >= startFirst && targetFirst < maturityFirst) {
+          return sum + (fd.amount || 0);
+        }
+        return sum;
+      } else {
+        // Regular FD: count it in the month it was created
+        if (!fd.createdAt) return sum;
+        const createdDate = new Date(fd.createdAt);
+        if (createdDate.getMonth() === month && createdDate.getFullYear() === year) {
+          return sum + (fd.amount || 0);
+        }
+        return sum;
+      }
+    }, 0);
+  };
+
+  const monthlyFixedDeposits = getMonthlyFDAddition(fixedDeposits, currentMonth, currentYear);
+  const monthlyMutualFunds = getMonthlyTransactionAddition(mutualFundTransactions, currentMonth, currentYear, 'MF');
+  const monthlySavings = getMonthlyAddition(savingsAccounts, currentMonth, currentYear, 'balance');
+  const monthlyStocks = getMonthlyTransactionAddition(stockTransactions, currentMonth, currentYear, 'Stock');
+
+  const prevMonthFixedDeposits = getMonthlyFDAddition(fixedDeposits, previousMonth, previousYear);
+  const prevMonthMutualFunds = getMonthlyTransactionAddition(mutualFundTransactions, previousMonth, previousYear, 'MF');
   const prevMonthSavings = getMonthlyAddition(savingsAccounts, previousMonth, previousYear, 'balance');
-  const prevMonthStocks = getMonthlyAddition(stocks, previousMonth, previousYear);
+  const prevMonthStocks = getMonthlyTransactionAddition(stockTransactions, previousMonth, previousYear, 'Stock');
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -131,12 +181,19 @@ const Index = () => {
                 title="Deposits"
                 amount={totalFixedDeposits}
                 icon={Landmark}
-                description={`${fixedDeposits.length} deposit${fixedDeposits.length !== 1 ? 's' : ''} • This month: ₹${monthlyFixedDeposits.toLocaleString('en-IN')} • Last month: ₹${prevMonthFixedDeposits.toLocaleString('en-IN')}`}
+                accentGradient="from-amber-600 to-yellow-400"
+                accentLight="#f59e0b14"
+                accentBorder="#f59e0b30"
+                accentColor="#f59e0b"
+                thisMonth={monthlyFixedDeposits}
+                lastMonth={prevMonthFixedDeposits}
+                count={fixedDeposits.length}
+                countLabel={`deposit${fixedDeposits.length !== 1 ? 's' : ''}`}
                 onViewDetails={() => setSelectedAsset('fixeddeposits')}
               />
-              <Button 
-                variant="outline" 
-                className="w-full" 
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => setAddAssetType('fixed-deposit')}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -148,12 +205,19 @@ const Index = () => {
                 title="Mutual Funds"
                 amount={totalMutualFunds}
                 icon={TrendingUp}
-                description={`${mutualFunds.length} fund${mutualFunds.length !== 1 ? 's' : ''} • This month: ₹${monthlyMutualFunds.toLocaleString('en-IN')} • Last month: ₹${prevMonthMutualFunds.toLocaleString('en-IN')}`}
+                accentGradient="from-blue-600 to-indigo-500"
+                accentLight="#3b82f614"
+                accentBorder="#3b82f630"
+                accentColor="#3b82f6"
+                thisMonth={monthlyMutualFunds}
+                lastMonth={prevMonthMutualFunds}
+                count={mutualFunds.length}
+                countLabel={`fund${mutualFunds.length !== 1 ? 's' : ''}`}
                 onViewDetails={() => setSelectedAsset('mutualfunds')}
               />
-              <Button 
-                variant="outline" 
-                className="w-full" 
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => setAddAssetType('mutual-fund')}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -165,12 +229,19 @@ const Index = () => {
                 title="Savings Account"
                 amount={totalSavings}
                 icon={PiggyBank}
-                description={`${savingsAccounts.length} account${savingsAccounts.length !== 1 ? 's' : ''} • This month: ₹${monthlySavings.toLocaleString('en-IN')} • Last month: ₹${prevMonthSavings.toLocaleString('en-IN')}`}
+                accentGradient="from-emerald-600 to-teal-400"
+                accentLight="#10b98114"
+                accentBorder="#10b98130"
+                accentColor="#10b981"
+                thisMonth={monthlySavings}
+                lastMonth={prevMonthSavings}
+                count={savingsAccounts.length}
+                countLabel={`account${savingsAccounts.length !== 1 ? 's' : ''}`}
                 onViewDetails={() => setSelectedAsset('savings')}
               />
-              <Button 
-                variant="outline" 
-                className="w-full" 
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => setAddAssetType('savings')}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -181,13 +252,20 @@ const Index = () => {
               <AssetCard
                 title="Stocks"
                 amount={totalStocks}
-                icon={TrendingDown}
-                description={`${stocks.length} stock${stocks.length !== 1 ? 's' : ''} • This month: ₹${monthlyStocks.toLocaleString('en-IN')} • Last month: ₹${prevMonthStocks.toLocaleString('en-IN')}`}
+                icon={TrendingUp}
+                accentGradient="from-violet-600 to-purple-400"
+                accentLight="#8b5cf614"
+                accentBorder="#8b5cf630"
+                accentColor="#8b5cf6"
+                thisMonth={monthlyStocks}
+                lastMonth={prevMonthStocks}
+                count={stocks.length}
+                countLabel={`holding${stocks.length !== 1 ? 's' : ''}`}
                 onViewDetails={() => setSelectedAsset('stocks')}
               />
-              <Button 
-                variant="outline" 
-                className="w-full" 
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => setAddAssetType('stock')}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -235,14 +313,14 @@ const Index = () => {
       </Dialog>
 
       {/* Add Asset Dialog */}
-      <AddAssetDialog 
+      <AddAssetDialog
         open={addAssetType !== null}
         onOpenChange={(open) => !open && setAddAssetType(null)}
         type={addAssetType!}
       />
 
       {/* Add Expense Dialog */}
-      <AddExpenseDialog 
+      <AddExpenseDialog
         open={showAddExpense}
         onOpenChange={setShowAddExpense}
       />
