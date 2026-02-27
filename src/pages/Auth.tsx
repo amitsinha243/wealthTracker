@@ -5,10 +5,10 @@ import { authAPI } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Mail } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail, Wallet, Lock, User, Sparkles, ShieldCheck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type AuthView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'email-sent';
 
@@ -25,19 +25,17 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check for reset token in URL query params (works with HashRouter)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const view = searchParams.get('view');
     const token = searchParams.get('token');
-    
+
     if (view === 'reset-password' && token) {
       setResetToken(token);
       setAuthView('reset-password');
     }
   }, [location.search]);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
       navigate('/');
@@ -92,17 +90,14 @@ const Auth = () => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (newPassword !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
-    
     if (newPassword.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;
     }
-    
     setIsSubmitting(true);
     try {
       await authAPI.resetPassword(resetToken, newPassword);
@@ -111,7 +106,6 @@ const Auth = () => {
       setResetToken('');
       setNewPassword('');
       setConfirmPassword('');
-      // Clear URL params
       navigate('/auth', { replace: true });
     } catch (error: any) {
       toast.error(error.message || 'Failed to reset password');
@@ -120,240 +114,357 @@ const Auth = () => {
     }
   };
 
-  const renderEmailSent = () => (
-    <div className="space-y-4 text-center">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-primary/10 p-4">
-          <Mail className="h-8 w-8 text-primary" />
-        </div>
-      </div>
-      <h3 className="text-lg font-semibold">Check your email</h3>
-      <p className="text-muted-foreground text-sm">
-        We've sent a password reset link to <strong>{email}</strong>. 
-        Click the link in the email to reset your password.
-      </p>
-      <p className="text-muted-foreground text-xs">
-        The link will expire in 1 hour.
-      </p>
-      <Button
-        variant="outline"
-        className="w-full mt-4"
-        onClick={() => setAuthView('login')}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Login
-      </Button>
-    </div>
-  );
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" }
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: { duration: 0.4, ease: "easeIn" }
+    }
+  };
 
-  const renderForgotPassword = () => (
-    <div className="space-y-4">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-2 -ml-2"
-        onClick={() => setAuthView('login')}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Login
-      </Button>
-      <form onSubmit={handleForgotPassword} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="forgot-email">Email</Label>
-          <Input
-            id="forgot-email"
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={isSubmitting}
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending...
-            </>
-          ) : (
-            'Send Reset Link'
-          )}
-        </Button>
-      </form>
-    </div>
-  );
-
-  const renderResetPassword = () => (
-    <div className="space-y-4">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-2 -ml-2"
-        onClick={() => {
-          setAuthView('login');
-          navigate('/auth', { replace: true });
-        }}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Login
-      </Button>
-      <form onSubmit={handleResetPassword} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="new-password">New Password</Label>
-          <Input
-            id="new-password"
-            type="password"
-            placeholder="Enter new password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            disabled={isSubmitting}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm-password">Confirm Password</Label>
-          <Input
-            id="confirm-password"
-            type="password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            disabled={isSubmitting}
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Resetting...
-            </>
-          ) : (
-            'Reset Password'
-          )}
-        </Button>
-      </form>
-    </div>
-  );
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Wealth Tracker</CardTitle>
-          <CardDescription>
-            {authView === 'forgot-password' && 'Reset your password'}
-            {authView === 'reset-password' && 'Enter your new password'}
-            {authView === 'email-sent' && 'Password reset email sent'}
-            {(authView === 'login' || authView === 'signup') && 'Manage your financial assets'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {authView === 'forgot-password' && renderForgotPassword()}
-          {authView === 'reset-password' && renderResetPassword()}
-          {authView === 'email-sent' && renderEmailSent()}
-          {(authView === 'login' || authView === 'signup') && (
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-[#0a0a0b] selection:bg-primary/30 selection:text-white">
+      {/* Dynamic Background Blobs */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px]"
+        />
+        <motion.div
+          animate={{
+            scale: [1.2, 1, 1.2],
+            x: [0, -40, 0],
+            y: [0, -20, 0],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute -bottom-[10%] -right-[10%] w-[45%] h-[45%] bg-accent/20 rounded-full blur-[100px]"
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,transparent_0%,rgba(10,10,11,0.8)_100%)]" />
+      </div>
+
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
+        style={{ backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="w-full max-w-[440px] px-6 relative z-10"
+      >
+        {/* Branding Section */}
+        <div className="text-center mb-8 space-y-2">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="inline-flex p-3 rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-2xl shadow-primary/20 mb-4"
+          >
+            <Wallet className="h-8 w-8 text-white" />
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-4xl font-black text-white tracking-tighter"
+          >
+            Wealth<span className="text-primary">Tracker</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-muted-foreground text-sm font-medium tracking-wide uppercase"
+          >
+            Master Your Financial Universe
+          </motion.p>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-[#161618]/60 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] shadow-2xl p-8 relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <AnimatePresence mode="wait">
+            {authView === 'login' && (
+              <motion.div
+                key="login"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white tracking-tight">Welcome Back</h2>
+                  <p className="text-muted-foreground text-sm">Please enter your details to login.</p>
+                </div>
+                <Tabs defaultValue="login" className="w-full" onValueChange={(val) => setAuthView(val as any)}>
+                  <TabsList className="grid w-full grid-cols-2 bg-muted/20 p-1 mb-8 rounded-xl h-12">
+                    <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Login</TabsTrigger>
+                    <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Join</TabsTrigger>
+                  </TabsList>
+
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="email"
+                          placeholder="name@example.com"
+                          className="bg-[#0a0a0b]/50 border-white/5 h-12 pl-10 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          className="bg-[#0a0a0b]/50 border-white/5 h-12 pl-10 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base transition-all mt-4" disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign In"}
+                    </Button>
+                    <button
+                      type="button"
+                      className="w-full text-xs text-muted-foreground hover:text-primary transition-colors mt-2 font-medium"
+                      onClick={() => setAuthView('forgot-password')}
+                    >
+                      Forgot your password?
+                    </button>
+                  </form>
+                </Tabs>
+              </motion.div>
+            )}
+
+            {authView === 'signup' && (
+              <motion.div
+                key="signup"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white tracking-tight">Create Account</h2>
+                  <p className="text-muted-foreground text-sm">Start your financial journey today.</p>
+                </div>
+                <Tabs defaultValue="signup" className="w-full" onValueChange={(val) => setAuthView(val as any)}>
+                  <TabsList className="grid w-full grid-cols-2 bg-muted/20 p-1 mb-8 rounded-xl h-12">
+                    <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Login</TabsTrigger>
+                    <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Join</TabsTrigger>
+                  </TabsList>
+
+                  <form onSubmit={handleSignup} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Full Name</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="text"
+                          placeholder="John Doe"
+                          className="bg-[#0a0a0b]/50 border-white/5 h-12 pl-10 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="email"
+                          placeholder="name@example.com"
+                          className="bg-[#0a0a0b]/50 border-white/5 h-12 pl-10 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          className="bg-[#0a0a0b]/50 border-white/5 h-12 pl-10 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base transition-all mt-4" disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="animate-spin" /> : "Create Account"}
+                    </Button>
+                  </form>
+                </Tabs>
+              </motion.div>
+            )}
+
+            {authView === 'forgot-password' && (
+              <motion.div
+                key="forgot"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="space-y-6"
+              >
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-white tracking-tight">Reset Password</h2>
+                  <p className="text-muted-foreground text-sm">We'll send you a link to reset your password.</p>
+                </div>
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
                     <Input
-                      id="login-email"
                       type="email"
+                      placeholder="name@example.com"
+                      className="bg-[#0a0a0b]/50 border-white/5 h-12 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      disabled={isSubmitting}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging in...
-                      </>
-                    ) : (
-                      'Login'
-                    )}
+                  <Button type="submit" className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Send Reset Link"}
                   </Button>
                   <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-sm"
-                    onClick={() => setAuthView('forgot-password')}
+                    variant="ghost"
+                    className="w-full hover:bg-white/5 text-muted-foreground"
+                    onClick={() => setAuthView('login')}
                   >
-                    Forgot password?
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Login
                   </Button>
                 </form>
-              </TabsContent>
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Name</Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      disabled={isSubmitting}
-                    />
+              </motion.div>
+            )}
+
+            {authView === 'email-sent' && (
+              <motion.div
+                key="sent"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center space-y-6"
+              >
+                <div className="flex justify-center">
+                  <div className="p-5 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                    <ShieldCheck size={48} />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Email Sent!</h3>
+                  <p className="text-muted-foreground text-sm mt-2">
+                    Check your inbox we've sent instructions to <span className="text-white font-medium">{email}</span>.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full h-12 rounded-xl border-white/10 hover:bg-white/5"
+                  onClick={() => setAuthView('login')}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Return to Login
+                </Button>
+              </motion.div>
+            )}
+
+            {authView === 'reset-password' && (
+              <motion.div
+                key="reset"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-2xl font-bold text-white tracking-tight">New Password</h2>
+                  <p className="text-muted-foreground text-sm">Please set your new secure password.</p>
+                </div>
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">New Password</Label>
                     <Input
-                      id="signup-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
                       type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="bg-[#0a0a0b]/50 border-white/5 h-12 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
                       required
-                      disabled={isSubmitting}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      'Sign Up'
-                    )}
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Confirm Password</Label>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      className="bg-[#0a0a0b]/50 border-white/5 h-12 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Reset Password"}
                   </Button>
                 </form>
-              </TabsContent>
-            </Tabs>
-          )}
-        </CardContent>
-      </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer Info */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8 text-center space-y-4"
+        >
+          <div className="flex items-center justify-center gap-6 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+            <div className="flex items-center gap-1.5 text-white/50 text-[10px] font-bold uppercase tracking-widest">
+              <Sparkles className="h-4 w-4" />
+              AI Powered
+            </div>
+            <div className="flex items-center gap-1.5 text-white/50 text-[10px] font-bold uppercase tracking-widest">
+              <Lock className="h-4 w-4" />
+              Secure Bank-Grade
+            </div>
+          </div>
+          <p className="text-[10px] text-white/20 font-medium tracking-tighter uppercase">
+            &copy; 2026 WealthTracker Labs. All assets encrypted.
+          </p>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
