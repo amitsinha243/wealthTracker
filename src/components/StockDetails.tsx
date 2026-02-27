@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Plus, TrendingUp, TrendingDown, BarChart2, Hash, CalendarDays, DollarSign } from "lucide-react";
+import { Edit, Trash2, Plus, TrendingUp, TrendingDown, BarChart2, Hash, CalendarDays, IndianRupee } from "lucide-react";
 import { Stock } from "@/hooks/useAssets";
 import { EditStockDialog } from "./EditStockDialog";
 import { AddStockUnitsDialog } from "./AddStockUnitsDialog";
@@ -144,7 +144,7 @@ export const StockDetails = ({ stocks, onUpdate, onDelete, onRefresh }: StockDet
                     style={{ background: palette.light, border: `1px solid ${palette.border}` }}
                   >
                     <div className="flex items-center justify-center gap-1 mb-1">
-                      <DollarSign className="h-3 w-3" style={{ color: palette.text }} />
+                      <IndianRupee className="h-3 w-3" style={{ color: palette.text }} />
                       <span className="text-xs text-muted-foreground">Avg.</span>
                     </div>
                     <p className="text-sm font-bold" style={{ color: palette.text }}>

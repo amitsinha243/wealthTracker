@@ -49,7 +49,23 @@ const Index = () => {
 
   const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   const totalMutualFunds = mutualFunds.reduce((sum, fund) => sum + (fund.units * fund.nav), 0);
-  const totalFixedDeposits = fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0);
+  const totalFixedDeposits = fixedDeposits.reduce((sum, fd) => {
+    if (fd.depositType === 'RD') {
+      const startDate = new Date(fd.startDate || fd.createdAt || new Date());
+      const now = new Date();
+      const monthsElapsed = Math.max(1,
+        (now.getFullYear() - startDate.getFullYear()) * 12 +
+        (now.getMonth() - startDate.getMonth()) + 1
+      );
+      const maturityDate = new Date(fd.maturityDate);
+      const totalMonths = Math.max(1,
+        (maturityDate.getFullYear() - startDate.getFullYear()) * 12 +
+        (maturityDate.getMonth() - startDate.getMonth())
+      );
+      return sum + (fd.amount * Math.min(monthsElapsed, totalMonths));
+    }
+    return sum + fd.amount;
+  }, 0);
   const totalStocks = stocks.reduce((sum, stock) => sum + (stock.quantity * stock.purchasePrice), 0);
   const totalAssets = totalSavings + totalMutualFunds + totalFixedDeposits + totalStocks;
 
@@ -193,11 +209,13 @@ const Index = () => {
               />
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full group hover:border-amber-500/50 hover:bg-amber-50/50 transition-all duration-300"
                 onClick={() => setAddAssetType('fixed-deposit')}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Deposit
+                <div className="p-1 rounded-md bg-amber-100 text-amber-600 mr-2 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+                <span className="font-medium">Add Deposit</span>
               </Button>
             </div>
             <div className="space-y-4">
@@ -217,11 +235,13 @@ const Index = () => {
               />
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full group hover:border-blue-500/50 hover:bg-blue-50/50 transition-all duration-300"
                 onClick={() => setAddAssetType('mutual-fund')}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Mutual Fund
+                <div className="p-1 rounded-md bg-blue-100 text-blue-600 mr-2 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+                <span className="font-medium">Add Mutual Fund</span>
               </Button>
             </div>
             <div className="space-y-4">
@@ -241,11 +261,13 @@ const Index = () => {
               />
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full group hover:border-emerald-500/50 hover:bg-emerald-50/50 transition-all duration-300"
                 onClick={() => setAddAssetType('savings')}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Savings Account
+                <div className="p-1 rounded-md bg-emerald-100 text-emerald-600 mr-2 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+                <span className="font-medium">Add Savings Account</span>
               </Button>
             </div>
             <div className="space-y-4">
@@ -265,11 +287,13 @@ const Index = () => {
               />
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full group hover:border-violet-500/50 hover:bg-violet-50/50 transition-all duration-300"
                 onClick={() => setAddAssetType('stock')}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Stock
+                <div className="p-1 rounded-md bg-violet-100 text-violet-600 mr-2 group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+                <span className="font-medium">Add Stock</span>
               </Button>
             </div>
           </div>
@@ -279,11 +303,18 @@ const Index = () => {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Financial Insights</h2>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <AddIncomeDialog />
-              <Button onClick={() => setShowAddExpense(true)}>
-                <Receipt className="h-4 w-4 mr-2" />
-                Add Expense
+              <Button
+                onClick={() => setShowAddExpense(true)}
+                className="group relative overflow-hidden bg-gradient-to-br from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 border-none shadow-lg shadow-rose-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-2 relative z-10">
+                  <div className="p-1 rounded-md bg-white/20 group-hover:bg-white/30 transition-colors">
+                    <Receipt className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-semibold tracking-wide">Add Expense</span>
+                </div>
               </Button>
             </div>
           </div>
