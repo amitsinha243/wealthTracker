@@ -11,8 +11,9 @@ import {
   Cell,
 } from "recharts";
 import { useAssets } from "@/hooks/useAssets";
-import { useMemo, useEffect, useState } from "react";
-import { mutualFundAPI } from "@/services/api";
+import { useIncome } from "@/hooks/useIncome";
+import { useExpenses } from "@/hooks/useExpenses";
+import { useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 
 // ── Colour palette ────────────────────────────────────────────────────────────
@@ -61,7 +62,23 @@ const fmtFull = (v: number) => `₹${v.toLocaleString("en-IN")}`;
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
 
-  const total = payload.reduce((s: number, p: any) => s + (p.value || 0), 0);
+  // The raw row data is accessible via payload[0].payload
+  const rawRow = payload[0]?.payload ?? {};
+
+  // For Savings Accounts, use the real signed delta from the raw row
+  // so negative months show correctly even though bar is clamped to 0
+  const getSavingsDisplayValue = (dataKey: string) => {
+    if (dataKey === "Savings Accounts") return rawRow["savingsDelta"] ?? 0;
+    const entry = payload.find((p: any) => p.dataKey === dataKey);
+    return entry?.value ?? 0;
+  };
+
+  // Total uses real signed delta
+  const total =
+    (rawRow["savingsDelta"] ?? 0) +
+    ((rawRow["Mutual Funds"] ?? 0) +
+      (rawRow["Deposits"] ?? 0) +
+      (rawRow["Stocks"] ?? 0));
 
   return (
     <div
@@ -71,7 +88,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         borderRadius: "12px",
         padding: "12px 16px",
         boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
-        minWidth: 200,
+        minWidth: 220,
       }}
     >
       <p
@@ -87,11 +104,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         {label}
       </p>
 
-      {payload.map((entry: any) => {
-        const series = SERIES.find((s) => s.key === entry.dataKey);
+      {SERIES.map((s) => {
+        const displayVal = getSavingsDisplayValue(s.key);
+        const isNegative = s.key === "Savings Accounts" && displayVal < 0;
         return (
           <div
-            key={entry.dataKey}
+            key={s.key}
             style={{
               display: "flex",
               alignItems: "center",
@@ -106,28 +124,24 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                   width: 10,
                   height: 10,
                   borderRadius: "50%",
-                  background: series?.color ?? entry.fill,
+                  background: isNegative ? "#ef4444" : s.color,
                   display: "inline-block",
                   flexShrink: 0,
                 }}
               />
-              <span
-                style={{
-                  fontSize: 12,
-                  color: "hsl(var(--muted-foreground))",
-                }}
-              >
-                {entry.dataKey}
+              <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
+                {s.key}
+                {isNegative && <span style={{ fontSize: 10, marginLeft: 4, color: "#ef4444" }}>▼ loss</span>}
               </span>
             </div>
             <span
               style={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: series?.color ?? entry.fill,
+                color: isNegative ? "#ef4444" : s.color,
               }}
             >
-              {fmtFull(entry.value ?? 0)}
+              {isNegative ? `-${fmtFull(Math.abs(displayVal))}` : fmtFull(displayVal)}
             </span>
           </div>
         );
@@ -144,16 +158,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         }}
       >
         <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
-          Total
+          Net Total
         </span>
         <span
           style={{
             fontSize: 13,
             fontWeight: 700,
-            color: "hsl(var(--foreground))",
+            color: total < 0 ? "#ef4444" : "hsl(var(--foreground))",
           }}
         >
-          {fmtFull(total)}
+          {total < 0 ? `-${fmtFull(Math.abs(total))}` : fmtFull(total)}
         </span>
       </div>
     </div>
@@ -202,34 +216,36 @@ const CustomLegend = () => (
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export const SavingsChart = () => {
-  const { savingsAccounts, mutualFunds, fixedDeposits, stocks } = useAssets();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const {
+    fixedDeposits,
+    mutualFundTransactions,
+    stockTransactions,
+    loading: assetsLoading
+  } = useAssets();
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const data = await mutualFundAPI.getAllTransactions();
-        setTransactions(data);
-      } catch (error) {
-        console.error("Failed to fetch transactions:", error);
-      }
-    };
-    fetchTransactions();
-  }, [mutualFunds]);
+  const { incomes, loading: incomeLoading } = useIncome();
+  const { expenses, loading: expenseLoading } = useExpenses();
 
   const chartData = useMemo(() => {
-    const monthlySavings: { [key: string]: number } = {};
+    const monthlyIncome: { [key: string]: number } = {};
+    const monthlyExpense: { [key: string]: number } = {};
     const monthlyFunds: { [key: string]: number } = {};
     const monthlyDeposits: { [key: string]: number } = {};
     const monthlyStocks: { [key: string]: number } = {};
 
-    savingsAccounts.forEach((account) => {
-      const date = new Date(account.createdAt || new Date());
+    incomes.forEach(income => {
+      const date = new Date(income.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      monthlySavings[monthKey] = (monthlySavings[monthKey] || 0) + account.balance;
+      monthlyIncome[monthKey] = (monthlyIncome[monthKey] || 0) + income.amount;
     });
 
-    transactions.forEach((transaction) => {
+    expenses.forEach(expense => {
+      const date = new Date(expense.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      monthlyExpense[monthKey] = (monthlyExpense[monthKey] || 0) + expense.amount;
+    });
+
+    mutualFundTransactions.forEach((transaction) => {
       const date = new Date(transaction.purchaseDate);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       monthlyFunds[monthKey] =
@@ -238,42 +254,38 @@ export const SavingsChart = () => {
 
     fixedDeposits.forEach((deposit) => {
       if (deposit.depositType === "RD") {
-        const startDate = new Date(
-          deposit.startDate || deposit.createdAt || new Date()
-        );
+        const startDate = new Date(deposit.startDate || deposit.createdAt || new Date());
         const maturityDate = new Date(deposit.maturityDate);
         const now = new Date();
         const endDate = maturityDate < now ? maturityDate : now;
 
-        let currentDate = new Date(
-          startDate.getFullYear(),
-          startDate.getMonth(),
-          1
-        );
+        let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
         while (currentDate <= endDate) {
           const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
-          monthlyDeposits[monthKey] =
-            (monthlyDeposits[monthKey] || 0) + deposit.amount;
+          monthlyDeposits[monthKey] = (monthlyDeposits[monthKey] || 0) + deposit.amount;
           currentDate.setMonth(currentDate.getMonth() + 1);
         }
       } else {
         const date = new Date(deposit.createdAt || new Date());
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-        monthlyDeposits[monthKey] =
-          (monthlyDeposits[monthKey] || 0) + deposit.amount;
+        monthlyDeposits[monthKey] = (monthlyDeposits[monthKey] || 0) + deposit.amount;
       }
     });
 
-    stocks.forEach((stock) => {
-      const date = new Date(
-        stock.purchaseDate || stock.createdAt || new Date()
-      );
+    stockTransactions.forEach((transaction) => {
+      const date = new Date(transaction.purchaseDate);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      monthlyStocks[monthKey] =
-        (monthlyStocks[monthKey] || 0) + stock.quantity * stock.purchasePrice;
+      monthlyStocks[monthKey] = (monthlyStocks[monthKey] || 0) + transaction.quantity * transaction.purchasePrice;
     });
 
-    const months = [];
+    const months: ({
+      month: string;
+      "Savings Accounts": number;
+      savingsDelta: number;
+      "Mutual Funds": number;
+      Deposits: number;
+      Stocks: number;
+    })[] = [];
     const now = new Date();
     for (let i = 11; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -283,17 +295,30 @@ export const SavingsChart = () => {
         year: "2-digit",
       });
 
+      const mFunds = monthlyFunds[monthKey] || 0;
+      const mDeposits = monthlyDeposits[monthKey] || 0;
+      const mStocks = monthlyStocks[monthKey] || 0;
+      const mIncome = monthlyIncome[monthKey] || 0;
+      const mExpense = monthlyExpense[monthKey] || 0;
+
+      // Signed delta: net cash flow after all investments
+      const netSavings = mIncome - mExpense;
+      const savingsDelta = netSavings - (mFunds + mDeposits + mStocks);
+
       months.push({
         month: monthName,
-        "Savings Accounts": monthlySavings[monthKey] || 0,
-        "Mutual Funds": monthlyFunds[monthKey] || 0,
-        Deposits: monthlyDeposits[monthKey] || 0,
-        Stocks: monthlyStocks[monthKey] || 0,
+        // Bar height is clamped to 0 for negative months
+        "Savings Accounts": Math.max(0, savingsDelta),
+        // Real signed value for the tooltip
+        savingsDelta,
+        "Mutual Funds": mFunds,
+        Deposits: mDeposits,
+        Stocks: mStocks,
       });
     }
 
     return months;
-  }, [savingsAccounts, mutualFunds, fixedDeposits, stocks, transactions]);
+  }, [incomes, expenses, mutualFundTransactions, stockTransactions, fixedDeposits]);
 
   // ── Summary stats for header pills ───────────────────────────────────────
   const totals = useMemo(

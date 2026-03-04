@@ -97,15 +97,18 @@ export const AssetCard = ({
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">This month</p>
               <p
                 className="text-sm font-semibold"
-                style={{ color: accentColor }}
+                style={{ color: thisMonth < 0 ? "#ef4444" : accentColor }}
               >
-                ₹{thisMonth.toLocaleString("en-IN")}
+                {thisMonth < 0 ? `-₹${Math.abs(thisMonth).toLocaleString("en-IN")}` : `₹${thisMonth.toLocaleString("en-IN")}`}
               </p>
             </div>
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Last month</p>
-              <p className="text-sm font-semibold text-muted-foreground">
-                ₹{lastMonth.toLocaleString("en-IN")}
+              <p
+                className="text-sm font-semibold"
+                style={{ color: lastMonth < 0 ? "#ef4444" : undefined }}
+              >
+                {lastMonth < 0 ? `-₹${Math.abs(lastMonth).toLocaleString("en-IN")}` : `₹${lastMonth.toLocaleString("en-IN")}`}
               </p>
             </div>
           </div>

@@ -6,6 +6,8 @@ import { useAssets } from "@/hooks/useAssets";
 import { AssetCard } from "@/components/AssetCard";
 import { SavingsChart } from "@/components/SavingsChart";
 import { TopExpenses } from "@/components/TopExpenses";
+import { useIncome } from "@/hooks/useIncome";
+import { useExpenses } from "@/hooks/useExpenses";
 import { IncomeVsExpenseChart } from "@/components/IncomeVsExpenseChart";
 import { AddIncomeDialog } from "@/components/AddIncomeDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -41,6 +43,8 @@ const Index = () => {
     deleteFixedDeposit,
     deleteStock
   } = useAssets();
+  const { incomes } = useIncome();
+  const { expenses } = useExpenses();
   const [selectedAsset, setSelectedAsset] = useState<AssetType>(null);
   const [addAssetType, setAddAssetType] = useState<'savings' | 'mutual-fund' | 'fixed-deposit' | 'stock' | null>(null);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -146,14 +150,38 @@ const Index = () => {
     }, 0);
   };
 
+  const getMonthlySavingsAddition = (month: number, year: number): number => {
+    const mIncome = incomes
+      .filter(i => {
+        const d = new Date(i.date);
+        return d.getMonth() === month && d.getFullYear() === year;
+      })
+      .reduce((sum, i) => sum + i.amount, 0);
+
+    const mExpense = expenses
+      .filter(e => {
+        const d = new Date(e.date);
+        return d.getMonth() === month && d.getFullYear() === year;
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const mFunds = getMonthlyTransactionAddition(mutualFundTransactions, month, year, 'MF');
+    const mStocks = getMonthlyTransactionAddition(stockTransactions, month, year, 'Stock');
+    const mDeposits = getMonthlyFDAddition(fixedDeposits, month, year);
+
+    // Signed delta: how much the savings account actually grew this month
+    const netSavingsFlow = mIncome - mExpense;
+    return netSavingsFlow - (mFunds + mStocks + mDeposits);
+  };
+
   const monthlyFixedDeposits = getMonthlyFDAddition(fixedDeposits, currentMonth, currentYear);
   const monthlyMutualFunds = getMonthlyTransactionAddition(mutualFundTransactions, currentMonth, currentYear, 'MF');
-  const monthlySavings = getMonthlyAddition(savingsAccounts, currentMonth, currentYear, 'balance');
+  const monthlySavings = getMonthlySavingsAddition(currentMonth, currentYear);
   const monthlyStocks = getMonthlyTransactionAddition(stockTransactions, currentMonth, currentYear, 'Stock');
 
   const prevMonthFixedDeposits = getMonthlyFDAddition(fixedDeposits, previousMonth, previousYear);
   const prevMonthMutualFunds = getMonthlyTransactionAddition(mutualFundTransactions, previousMonth, previousYear, 'MF');
-  const prevMonthSavings = getMonthlyAddition(savingsAccounts, previousMonth, previousYear, 'balance');
+  const prevMonthSavings = getMonthlySavingsAddition(previousMonth, previousYear);
   const prevMonthStocks = getMonthlyTransactionAddition(stockTransactions, previousMonth, previousYear, 'Stock');
 
   return (
