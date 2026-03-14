@@ -8,6 +8,7 @@ import AIAssistant from "./pages/AIAssistant";
 import PhysicalAssets from "./pages/PhysicalAssets";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { Toaster } from "@/components/ui/sonner";
 
 const App = () => (
   <Router>
@@ -21,6 +22,7 @@ const App = () => (
       <Route path="/physical-assets" element={<ProtectedRoute><PhysicalAssets /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <Toaster richColors position="top-right" />
   </Router>
 );
 

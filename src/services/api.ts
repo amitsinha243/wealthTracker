@@ -28,6 +28,20 @@ export const authAPI = {
     return response.json();
   },
 
+  verifyToken: async (token: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!response.ok) {
+      throw new Error('Token invalid or expired');
+    }
+    return response.json(); // { id, email, name }
+  },
+
   forgotPassword: async (email: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
       method: 'POST',
@@ -170,14 +184,14 @@ export const fixedDepositAPI = {
     if (!response.ok) throw new Error('Failed to fetch fixed deposits');
     return response.json();
   },
-  
+
   create: async (data: any) => {
     // Ensure maturityDate is in ISO format
     const formattedData = {
       ...data,
       maturityDate: data.maturityDate ? new Date(data.maturityDate).toISOString().split('T')[0] : null
     };
-    
+
     const response = await fetch(`${API_BASE_URL}/fixed-deposits`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -192,7 +206,7 @@ export const fixedDepositAPI = {
       ...data,
       maturityDate: data.maturityDate ? new Date(data.maturityDate).toISOString().split('T')[0] : null
     };
-    
+
     const response = await fetch(`${API_BASE_URL}/fixed-deposits/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -220,14 +234,14 @@ export const stockAPI = {
     if (!response.ok) throw new Error('Failed to fetch stocks');
     return response.json();
   },
-  
+
   create: async (data: any) => {
     // Ensure purchaseDate is in ISO format
     const formattedData = {
       ...data,
       purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString().split('T')[0] : null
     };
-    
+
     const response = await fetch(`${API_BASE_URL}/stocks`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -268,7 +282,7 @@ export const stockAPI = {
       ...data,
       purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString().split('T')[0] : null
     };
-    
+
     const response = await fetch(`${API_BASE_URL}/stocks/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),

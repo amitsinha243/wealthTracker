@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '@/services/api';
+import { API_BASE_URL } from '@/config/api';
 
 interface User {
   id: string;
@@ -27,19 +28,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    const storedToken = localStorage.getItem('authToken');
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const verifyStoredSession = async () => {
+      const storedToken = localStorage.getItem('authToken');
+      const storedUser = localStorage.getItem('currentUser');
+
+      if (!storedToken || !storedUser) {
+        // Nothing stored — go straight to login
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Validate the token against the backend
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${storedToken}`
+          }
+        });
+
+        if (response.ok) {
+          // Token is valid — use fresh data from server
+          const userData = await response.json();
+          setUser({ id: userData.id, email: userData.email, name: userData.name });
+        } else if (response.status === 401 || response.status === 403) {
+          // Server explicitly rejected the token — clear everything
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('currentUser');
+          setUser(null);
+        } else {
+          // Unexpected server error (5xx, etc.) — trust local session to avoid false logouts
+          setUser(JSON.parse(storedUser));
+        }
+      } catch {
+        // Network error (server down, no internet, CORS) — trust local session
+        // so the user isn't logged out just because the server is temporarily unreachable
+        setUser(JSON.parse(storedUser));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyStoredSession();
   }, []);
 
   const signup = async (email: string, password: string, name: string): Promise<AuthResult> => {
     try {
       const response = await authAPI.signup(email, password, name);
       const userToStore = { id: response.id, email: response.email, name: response.name };
-      
+
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('currentUser', JSON.stringify(userToStore));
       setUser(userToStore);
@@ -55,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await authAPI.login(email, password);
       const userToStore = { id: response.id, email: response.email, name: response.name };
-      
+
       localStorage.setItem('authToken', response.token);
       localStorage.setItem('currentUser', JSON.stringify(userToStore));
       setUser(userToStore);

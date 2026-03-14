@@ -189,24 +189,26 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 shrink-0">
               <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary/80">
                 <Wallet className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">WealthTracker</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">WealthTracker</h1>
                 <p className="text-xs text-muted-foreground">Welcome, {user.name}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total Assets</p>
-                <p className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <div className="text-right min-w-0 overflow-hidden">
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Assets</p>
+                <p className="text-base sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">
                   ₹{totalAssets.toLocaleString('en-IN')}
                 </p>
               </div>
-              <NavigationMenu />
+              <div className="shrink-0">
+                <NavigationMenu />
+              </div>
             </div>
           </div>
         </div>
