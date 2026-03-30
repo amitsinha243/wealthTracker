@@ -24,8 +24,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem('currentUser');
+    try {
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    // If we have no token, we aren't loading, we're just logged out.
+    // This allows immediate redirect to /auth without showing a spinner.
+    return !!localStorage.getItem('authToken');
+  });
 
   useEffect(() => {
     const verifyStoredSession = async () => {
@@ -33,7 +44,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const storedUser = localStorage.getItem('currentUser');
 
       if (!storedToken || !storedUser) {
-        // Nothing stored — go straight to login
         setLoading(false);
         return;
       }
