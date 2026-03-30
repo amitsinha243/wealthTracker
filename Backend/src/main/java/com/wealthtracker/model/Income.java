@@ -13,6 +13,7 @@ public class Income {
     private LocalDate date;
     private String source;
     private String description;
+    private String savingsAccountId;
 
     public Income() {}
 
@@ -42,4 +43,7 @@ public class Income {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getSavingsAccountId() { return savingsAccountId; }
+    public void setSavingsAccountId(String savingsAccountId) { this.savingsAccountId = savingsAccountId; }
 }

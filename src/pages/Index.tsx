@@ -20,6 +20,7 @@ import { StockDetails } from "@/components/StockDetails";
 import { AddAssetDialog } from "@/components/AddAssetDialog";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { Footer } from "@/components/Footer";
+import { TransferFundsDialog } from "@/components/TransferFundsDialog";
 
 type AssetType = 'savings' | 'mutualfunds' | 'fixeddeposits' | 'stocks' | null;
 
@@ -335,15 +336,15 @@ const Index = () => {
             <h2 className="text-xl font-semibold text-foreground">Financial Insights</h2>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <AddIncomeDialog />
+              <TransferFundsDialog />
               <Button
                 onClick={() => setShowAddExpense(true)}
-                className="group relative overflow-hidden bg-gradient-to-br from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 border-none shadow-lg shadow-rose-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] px-3 sm:px-4"
+                size="sm"
+                className="group relative overflow-hidden bg-gradient-to-br from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 border-none shadow-lg shadow-rose-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] px-3"
               >
-                <div className="flex items-center gap-2 relative z-10">
-                  <div className="p-1 rounded-md bg-white/20 group-hover:bg-white/30 transition-colors">
-                    <Receipt className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="font-semibold tracking-wide">Add Expense</span>
+                <div className="flex items-center gap-1.5 relative z-10">
+                  <Receipt className="h-3.5 w-3.5 text-white" />
+                  <span className="font-semibold tracking-wide text-xs">Expense</span>
                 </div>
               </Button>
             </div>

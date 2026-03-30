@@ -111,7 +111,9 @@ const Assets = () => {
                   ₹{totalAssets.toLocaleString('en-IN')}
                 </p>
               </div>
-              <NavigationMenu />
+              <div className="flex items-center gap-2">
+                <NavigationMenu />
+              </div>
             </div>
           </div>
         </div>

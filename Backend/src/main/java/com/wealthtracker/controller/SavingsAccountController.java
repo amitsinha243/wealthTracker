@@ -1,5 +1,6 @@
 package com.wealthtracker.controller;
 
+import com.wealthtracker.dto.TransferRequest;
 import com.wealthtracker.model.SavingsAccount;
 import com.wealthtracker.repository.SavingsAccountRepository;
 import com.wealthtracker.util.EncryptionUtil;
@@ -90,6 +91,33 @@ public class SavingsAccountController {
         }
         
         savingsAccountRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<Void> transfer(@RequestBody TransferRequest request, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        
+        SavingsAccount fromAccount = savingsAccountRepository.findById(request.getFromAccountId())
+                .orElseThrow(() -> new RuntimeException("Source account not found"));
+        
+        SavingsAccount toAccount = savingsAccountRepository.findById(request.getToAccountId())
+                .orElseThrow(() -> new RuntimeException("Destination account not found"));
+        
+        if (!fromAccount.getUserId().equals(userId) || !toAccount.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        if (fromAccount.getBalance() < request.getAmount()) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        
+        fromAccount.setBalance(fromAccount.getBalance() - request.getAmount());
+        toAccount.setBalance(toAccount.getBalance() + request.getAmount());
+        
+        savingsAccountRepository.save(fromAccount);
+        savingsAccountRepository.save(toAccount);
+        
         return ResponseEntity.ok().build();
     }
 }

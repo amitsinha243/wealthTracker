@@ -2,6 +2,7 @@ package com.wealthtracker.controller;
 
 import com.wealthtracker.model.Income;
 import com.wealthtracker.repository.IncomeRepository;
+import com.wealthtracker.repository.SavingsAccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,9 @@ public class IncomeController {
     @Autowired
     private IncomeRepository incomeRepository;
 
+    @Autowired
+    private SavingsAccountRepository savingsAccountRepository;
+
     @GetMapping
     public ResponseEntity<List<Income>> getAllIncomes(Authentication authentication) {
         String userId = authentication.getName();
@@ -28,6 +32,17 @@ public class IncomeController {
         String userId = authentication.getName();
         income.setUserId(userId);
         Income savedIncome = incomeRepository.save(income);
+
+        // Update bank balance if savingsAccountId is provided
+        if (income.getSavingsAccountId() != null && !income.getSavingsAccountId().isEmpty()) {
+            savingsAccountRepository.findById(income.getSavingsAccountId()).ifPresent(account -> {
+                if (account.getUserId().equals(userId)) {
+                    account.setBalance(account.getBalance() + income.getAmount());
+                    savingsAccountRepository.save(account);
+                }
+            });
+        }
+
         return ResponseEntity.ok(savedIncome);
     }
 

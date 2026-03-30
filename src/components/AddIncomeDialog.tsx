@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, IndianRupee, Calendar, FileText, ChevronRight, Briefcase, TrendingUp, Home, MoreHorizontal } from "lucide-react";
+import { Plus, IndianRupee, Calendar, FileText, ChevronRight, Briefcase, TrendingUp, Home, MoreHorizontal, Landmark } from "lucide-react";
 import { useIncome } from "@/hooks/useIncome";
+import { useAssets } from "@/hooks/useAssets";
 import { toast } from "sonner";
 
 const INCOME_SOURCES = [
@@ -20,11 +21,13 @@ const INCOME_SOURCES = [
 export const AddIncomeDialog = () => {
   const [open, setOpen] = useState(false);
   const { addIncome } = useIncome();
+  const { savingsAccounts } = useAssets();
   const [formData, setFormData] = useState({
     amount: '',
     date: new Date().toISOString().split('T')[0],
     source: 'Salary' as typeof INCOME_SOURCES[number]['value'],
-    description: ''
+    description: '',
+    savingsAccountId: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,7 +38,8 @@ export const AddIncomeDialog = () => {
         amount: parseFloat(formData.amount),
         date: formData.date,
         source: formData.source,
-        description: formData.description
+        description: formData.description,
+        savingsAccountId: formData.savingsAccountId || undefined
       });
 
       toast.success("Income added successfully");
@@ -44,7 +48,8 @@ export const AddIncomeDialog = () => {
         amount: '',
         date: new Date().toISOString().split('T')[0],
         source: 'Salary',
-        description: ''
+        description: '',
+        savingsAccountId: ''
       });
     } catch (error) {
       toast.error("Failed to add income");
@@ -56,12 +61,10 @@ export const AddIncomeDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 border-none shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
-          <div className="flex items-center gap-2 relative z-10">
-            <div className="p-1 rounded-md bg-white/20 group-hover:bg-white/30 transition-colors">
-              <Plus className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-semibold tracking-wide">Add Income</span>
+        <Button size="sm" className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 border-none shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
+          <div className="flex items-center gap-1.5 relative z-10">
+            <Plus className="h-3.5 w-3.5 text-white" />
+            <span className="font-semibold tracking-wide text-xs">Income</span>
           </div>
         </Button>
       </DialogTrigger>
@@ -149,7 +152,6 @@ export const AddIncomeDialog = () => {
               </div>
             </div>
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="description" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground ml-1">
               Description (Optional)
@@ -166,6 +168,33 @@ export const AddIncomeDialog = () => {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="savingsAccount" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground ml-1">
+              Deposit to Account (Optional)
+            </Label>
+            <Select
+              value={formData.savingsAccountId}
+              onValueChange={(value) => setFormData({ ...formData, savingsAccountId: value })}
+            >
+              <SelectTrigger className="h-11 border-border/50 focus:ring-emerald-500/20 bg-muted/30 hover:bg-muted/50 transition-all">
+                <SelectValue placeholder="Select account" />
+              </SelectTrigger>
+              <SelectContent className="border-border/50">
+                <SelectItem value="none" className="focus:bg-emerald-50 focus:text-emerald-600">None</SelectItem>
+                {savingsAccounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id} className="focus:bg-emerald-50 focus:text-emerald-600">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-emerald-50 text-emerald-600">
+                        <Landmark className="h-4 w-4" />
+                      </div>
+                      <span>{account.bankName} (**** {account.accountNumber.slice(-4)})</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="pt-2 flex gap-3">

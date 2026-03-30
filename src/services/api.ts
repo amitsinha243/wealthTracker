@@ -106,6 +106,15 @@ export const savingsAccountAPI = {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to delete savings account');
+  },
+  
+  transfer: async (fromAccountId: string, toAccountId: string, amount: number) => {
+    const response = await fetch(`${API_BASE_URL}/savings-accounts/transfer`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ fromAccountId, toAccountId, amount })
+    });
+    if (!response.ok) throw new Error('Failed to transfer funds');
   }
 };
 

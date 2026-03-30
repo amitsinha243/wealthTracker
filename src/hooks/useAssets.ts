@@ -255,6 +255,18 @@ export const useAssets = () => {
     }
   };
 
+  const transferFunds = async (fromId: string, toId: string, amount: number) => {
+    if (!user) return;
+
+    try {
+      await savingsAccountAPI.transfer(fromId, toId, amount);
+      setTimeout(() => fetchAssets(), 500);
+    } catch (error) {
+      console.error('Error transferring funds:', error);
+      throw error;
+    }
+  };
+
   return {
     savingsAccounts,
     mutualFunds,
@@ -275,6 +287,7 @@ export const useAssets = () => {
     deleteSavingsAccount,
     deleteMutualFund,
     deleteFixedDeposit,
-    deleteStock
+    deleteStock,
+    transferFunds
   };
 };
