@@ -82,32 +82,32 @@ const Assets = () => {
       {/* Header */}
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <Button
                 variant="ghost"
                 size="icon"
                 asChild
-                className="rounded-full hover:bg-muted/80 transition-all active:scale-90"
+                className="rounded-full hover:bg-muted/80 transition-all active:scale-90 shrink-0"
               >
                 <Link to="/">
                   <ArrowLeft className="h-5 w-5" />
                 </Link>
               </Button>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/20">
-                  <Wallet className="h-6 w-6 text-primary-foreground" />
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/20 shrink-0">
+                  <Wallet className="h-5 w-5 sm:h-6 w-6 text-primary-foreground" />
                 </div>
-                <div>
-                  <h1 className="text-2xl font-black text-foreground tracking-tighter">CURRENT ASSETS</h1>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-[0.2em] leading-none mt-1">Net Worth Overview</p>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tighter truncate">CURRENT ASSETS</h1>
+                  <p className="hidden sm:block text-[10px] text-muted-foreground uppercase font-bold tracking-[0.2em] leading-none mt-1">Net Worth Overview</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden md:block text-right pr-4 border-r border-border/50">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Liquid Net Worth</p>
-                <p className="text-xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <div className="text-right pr-2 sm:pr-4 border-r border-border/50 min-w-0">
+                <p className="text-[8px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1 truncate">Net Worth</p>
+                <p className="text-sm sm:text-xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">
                   ₹{totalAssets.toLocaleString('en-IN')}
                 </p>
               </div>

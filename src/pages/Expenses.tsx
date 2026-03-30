@@ -49,6 +49,7 @@ const CATEGORY_CONFIG: Record<string, { icon: any; color: string; bg: string }> 
   "Healthcare": { icon: Heart, color: "text-rose-600", bg: "bg-rose-600/10" },
   "Travel": { icon: Plane, color: "text-indigo-600", bg: "bg-indigo-600/10" },
   "Entertainment": { icon: Music, color: "text-purple-600", bg: "bg-purple-600/10" },
+  "RD Installment": { icon: Landmark, color: "text-amber-600", bg: "bg-amber-600/10" },
   "Other": { icon: Receipt, color: "text-slate-600", bg: "bg-slate-600/10" },
 };
 
@@ -85,6 +86,41 @@ const Expenses = () => {
   const bankAccounts = useMemo(() => {
     const accountIds = [...new Set(expenses.map(exp => exp.savingsAccountId).filter(Boolean))];
     return savingsAccounts.filter(acc => accountIds.includes(acc.id));
+  }, [expenses, savingsAccounts]);
+
+  // Compute remaining balance after each expense per savings account
+  const balanceAfterExpense = useMemo(() => {
+    const balanceMap = new Map<string, number>();
+
+    // Group all expenses by savings account
+    const expensesByAccount = new Map<string, Expense[]>();
+    for (const exp of expenses) {
+      if (!exp.savingsAccountId) continue;
+      const list = expensesByAccount.get(exp.savingsAccountId) || [];
+      list.push(exp);
+      expensesByAccount.set(exp.savingsAccountId, list);
+    }
+
+    // For each account, sort expenses by date ascending, then walk from newest to oldest
+    for (const [accountId, accountExpenses] of expensesByAccount) {
+      const account = savingsAccounts.find(a => a.id === accountId);
+      if (!account) continue;
+
+      // Sort ascending by date (oldest first)
+      const sorted = [...accountExpenses].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      // Walk from newest to oldest: most recent expense gets the current balance,
+      // each older expense gets balance + sum of all newer expenses
+      let runningBalance = account.balance;
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        balanceMap.set(sorted[i].id, runningBalance);
+        runningBalance += sorted[i].amount;
+      }
+    }
+
+    return balanceMap;
   }, [expenses, savingsAccounts]);
 
   // Filter expenses based on selected filters
@@ -227,41 +263,41 @@ const Expenses = () => {
       {/* Header */}
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <Button
                 variant="ghost"
                 size="icon"
                 asChild
-                className="rounded-full hover:bg-muted/80 transition-all active:scale-90"
+                className="rounded-full hover:bg-muted/80 transition-all active:scale-90 shrink-0"
               >
                 <Link to="/">
                   <ArrowLeft className="h-5 w-5" />
                 </Link>
               </Button>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-rose-600 to-pink-500 shadow-lg shadow-rose-500/20">
-                  <Receipt className="h-6 w-6 text-white" />
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-rose-600 to-pink-500 shadow-lg shadow-rose-500/20 shrink-0">
+                  <Receipt className="h-5 w-5 sm:h-6 w-6 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-2xl font-black text-foreground tracking-tighter">ALL EXPENSES</h1>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-[0.2em] leading-none mt-1">Transaction History</p>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tighter truncate">ALL EXPENSES</h1>
+                  <p className="hidden sm:block text-[10px] text-muted-foreground uppercase font-bold tracking-[0.2em] leading-none mt-1">Transaction History</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden md:block text-right pr-4 border-r border-border/50">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Spending</p>
-                <p className="text-xl font-black text-rose-600">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <div className="text-right pr-2 sm:pr-4 border-r border-border/50 min-w-0">
+                <p className="text-[8px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1 truncate">Total Spent</p>
+                <p className="text-sm sm:text-xl font-black text-rose-600 truncate">
                   ₹{totalExpenses.toLocaleString('en-IN')}
                 </p>
               </div>
               <Button
                 onClick={() => setShowAddExpense(true)}
-                className="bg-gradient-to-br from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 font-bold shadow-lg shadow-rose-500/20"
+                className="bg-gradient-to-br from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 font-bold shadow-lg shadow-rose-500/20 px-3 sm:px-4"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                New Expense
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Expense</span>
               </Button>
               <NavigationMenu />
             </div>
@@ -282,7 +318,7 @@ const Expenses = () => {
                 </div>
 
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-[160px] h-10 rounded-xl border-border/50 bg-background/50">
+                  <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-xl border-border/50 bg-background/50">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -294,7 +330,7 @@ const Expenses = () => {
                 </Select>
 
                 <Select value={bankAccountFilter} onValueChange={setBankAccountFilter}>
-                  <SelectTrigger className="w-[180px] h-10 rounded-xl border-border/50 bg-background/50">
+                  <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-background/50">
                     <SelectValue placeholder="Bank Account" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -306,7 +342,7 @@ const Expenses = () => {
                 </Select>
 
                 <Select value={dateRangeFilter} onValueChange={handleDateRangeChange}>
-                  <SelectTrigger className="w-[160px] h-10 rounded-xl border-border/50 bg-background/50">
+                  <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-xl border-border/50 bg-background/50">
                     <SelectValue placeholder="Period" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -332,8 +368,8 @@ const Expenses = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="text-right">
+              <div className="flex items-center justify-between sm:justify-end gap-4 w-full lg:w-auto border-t lg:border-t-0 pt-4 lg:pt-0 border-border/40">
+                <div className="text-left sm:text-right">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">
                     {isFiltered ? 'Filtered Amount' : 'Period Total'}
                   </p>
@@ -345,7 +381,7 @@ const Expenses = () => {
                   variant="outline"
                   size="icon"
                   onClick={exportToCSV}
-                  className="rounded-xl border-border/50 hover:bg-background h-10 w-10"
+                  className="rounded-xl border-border/50 hover:bg-background h-10 w-10 shrink-0"
                 >
                   <Download className="h-4 w-4" />
                 </Button>
@@ -430,27 +466,27 @@ const Expenses = () => {
                       return (
                         <div
                           key={expense.id}
-                          className="group relative flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/30 hover:bg-muted/40 hover:border-border/60 transition-all duration-300"
+                          className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/30 hover:bg-muted/40 hover:border-border/60 transition-all duration-300 gap-4 sm:gap-0"
                         >
                           <div className="flex items-center gap-4">
                             <div className={cn("p-3 rounded-xl shadow-sm transition-all duration-300 group-hover:scale-110", config.bg, config.color)}>
                               <Icon className="h-5 w-5" />
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-foreground text-lg">{expense.category}</span>
-                                <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-bold text-foreground text-base sm:text-lg">{expense.category}</span>
+                                <span className="h-1 w-1 rounded-full bg-muted-foreground/30 hidden sm:block" />
                                 <span className="text-xs font-bold text-muted-foreground uppercase opacity-70">
                                   {format(new Date(expense.date), "dd MMM, yyyy")}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <p className="text-sm text-muted-foreground/80 font-medium">
+                              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                                <p className="text-sm text-muted-foreground/80 font-medium truncate">
                                   {expense.description || "No description provided"}
                                 </p>
                                 {expense.savingsAccountId && (
                                   <>
-                                    <span className="h-3 w-[1px] bg-muted-foreground/20" />
+                                    <span className="h-3 w-[1px] bg-muted-foreground/20 hidden sm:block" />
                                     <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/50 border border-border/50">
                                       <Landmark className="h-3 w-3 text-muted-foreground" />
                                       <span className="text-[10px] font-bold text-muted-foreground uppercase">{getBankName(expense.savingsAccountId)}</span>
@@ -461,10 +497,15 @@ const Expenses = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-6">
-                            <div className="text-right">
+                          <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 border-t sm:border-t-0 pt-3 sm:pt-0 border-border/40 sm:border-none">
+                            <div className="text-left sm:text-right">
                               <p className="text-xl font-black text-rose-600">₹{expense.amount.toLocaleString('en-IN')}</p>
-                              <div className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                              {expense.savingsAccountId && balanceAfterExpense.has(expense.id) && (
+                                <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">
+                                  Bal: ₹{balanceAfterExpense.get(expense.id)!.toLocaleString('en-IN')}
+                                </p>
+                              )}
+                              <div className="flex justify-start sm:justify-end gap-1 mt-1 sm:opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -483,7 +524,7 @@ const Expenses = () => {
                                 </Button>
                               </div>
                             </div>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
+                            <ChevronRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors hidden sm:block" />
                           </div>
                         </div>
                       );

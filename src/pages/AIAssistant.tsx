@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import {
   MessageSquare,
   Clock,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { aiAPI, AgentReport } from "@/services/aiApi";
 
@@ -326,20 +328,43 @@ const AIAssistant = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">AI Financial Dashboard</h1>
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <span className="inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                Powered by llama3.2 · running locally via Ollama
-              </p>
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="rounded-full hover:bg-muted/80 transition-all active:scale-90 shrink-0"
+              >
+                <Link to="/">
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+              </Button>
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-500 shadow-lg shadow-violet-500/20 shrink-0">
+                  <Bot className="h-5 w-5 sm:h-6 w-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tighter truncate uppercase">AI Assistant</h1>
+                  <p className="hidden sm:block text-[10px] text-muted-foreground uppercase font-bold tracking-[0.2em] leading-none mt-1">Smart Financial Insights</p>
+                </div>
+              </div>
             </div>
-            <NavigationMenu />
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <div className="hidden lg:block text-right pr-4 border-r border-border/50">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Status</p>
+                <p className="text-sm font-bold text-emerald-500 flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </p>
+              </div>
+              <NavigationMenu />
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Content */}
       <div className="container mx-auto px-4 py-6 flex-1">

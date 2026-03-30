@@ -331,13 +331,13 @@ const Index = () => {
 
         {/* Savings & Expenses */}
         <section>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <h2 className="text-xl font-semibold text-foreground">Financial Insights</h2>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <AddIncomeDialog />
               <Button
                 onClick={() => setShowAddExpense(true)}
-                className="group relative overflow-hidden bg-gradient-to-br from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 border-none shadow-lg shadow-rose-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                className="group relative overflow-hidden bg-gradient-to-br from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 border-none shadow-lg shadow-rose-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] px-3 sm:px-4"
               >
                 <div className="flex items-center gap-2 relative z-10">
                   <div className="p-1 rounded-md bg-white/20 group-hover:bg-white/30 transition-colors">

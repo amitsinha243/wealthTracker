@@ -30,26 +30,36 @@ const Trips = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" asChild>
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="rounded-full hover:bg-muted/80 transition-all active:scale-90 shrink-0"
+              >
                 <Link to="/">
                   <ArrowLeft className="h-5 w-5" />
                 </Link>
               </Button>
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary/80">
-                  <Plane className="h-6 w-6 text-primary-foreground" />
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/80 shrink-0">
+                  <Plane className="h-5 w-5 sm:h-6 w-6 text-primary-foreground" />
                 </div>
-                <h1 className="text-2xl font-bold text-foreground">Trip Expenses</h1>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tighter truncate uppercase">Trip Expenses</h1>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setShowAddTrip(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Trip
+            <div className="flex items-center gap-2 shrink-0">
+              <Button 
+                onClick={() => setShowAddTrip(true)}
+                className="bg-primary hover:bg-primary/90 font-bold px-3 sm:px-4"
+              >
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Trip</span>
               </Button>
               <NavigationMenu />
             </div>
