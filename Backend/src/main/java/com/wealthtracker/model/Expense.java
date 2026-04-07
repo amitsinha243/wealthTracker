@@ -19,6 +19,7 @@ public class Expense {
     private LocalDate date;
     private String description;
     private String savingsAccountId; // Optional: link to savings account for auto-deduction
+    private String sourceDepositId; // Optional: tracks which RD generated this expense (for deduplication)
 
     private LocalDate createdAt;
     private LocalDate updatedAt;

@@ -89,7 +89,7 @@ export const AddExpenseDialog = ({ open, onOpenChange }: AddExpenseDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden border-none sm:rounded-2xl">
+      <DialogContent className="max-w-md p-0 overflow-hidden border-none sm:rounded-2xl max-h-[90dvh] overflow-y-auto">
         <div className="bg-gradient-to-br from-rose-600 to-pink-500 p-6 text-white relative">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
             <TrendingDown size={120} />
@@ -138,7 +138,7 @@ export const AddExpenseDialog = ({ open, onOpenChange }: AddExpenseDialogProps) 
                 <SelectTrigger className="h-11 border-border/50 focus:ring-rose-500/20 bg-muted/30 hover:bg-muted/50 transition-all">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent className="border-border/50">
+                <SelectContent className="border-border/50 max-h-[40vh] overflow-y-auto">
                   {EXPENSE_CATEGORIES.map((cat) => {
                     const Icon = CATEGORY_ICONS[cat] || Receipt;
                     return (

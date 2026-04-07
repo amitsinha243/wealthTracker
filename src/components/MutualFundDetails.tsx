@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Plus, Edit, Trash2, BarChart2, Hash, CalendarDays } from "lucide-react";
+import {
+  TrendingUp, Plus, Edit, Trash2, BarChart2, Hash, CalendarDays,
+  ChevronDown, ChevronUp, Receipt, ArrowDownRight
+} from "lucide-react";
 import { MutualFund } from "@/hooks/useAssets";
 import { AddMutualFundUnitsDialog } from "./AddMutualFundUnitsDialog";
 import { EditMutualFundDialog } from "./EditMutualFundDialog";
@@ -16,12 +19,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { API_BASE_URL, getAuthHeaders } from "@/config/api";
 
 interface MutualFundDetailsProps {
   funds: MutualFund[];
   onRefresh?: () => void;
   onUpdate: (id: string, data: Partial<MutualFund>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+}
+
+interface MutualFundTransaction {
+  id: string;
+  mutualFundId: string;
+  userId: string;
+  units: number;
+  nav: number;
+  purchaseDate: string;
+  createdAt: string;
 }
 
 const FUND_COLORS = [
@@ -37,6 +51,9 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
   const [showAddUnitsDialog, setShowAddUnitsDialog] = useState(false);
   const [editFund, setEditFund] = useState<MutualFund | null>(null);
   const [deleteFundId, setDeleteFundId] = useState<string | null>(null);
+  const [expandedFundId, setExpandedFundId] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<Record<string, MutualFundTransaction[]>>({});
+  const [loadingTx, setLoadingTx] = useState<string | null>(null);
 
   const handleAddUnits = (fund: any) => {
     setSelectedFund(fund);
@@ -52,6 +69,34 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
       toast.error("Failed to delete mutual fund");
     } finally {
       setDeleteFundId(null);
+    }
+  };
+
+  const toggleExpand = async (fundId: string) => {
+    if (expandedFundId === fundId) {
+      setExpandedFundId(null);
+      return;
+    }
+    setExpandedFundId(fundId);
+
+    // Fetch if not already loaded
+    if (!transactions[fundId]) {
+      setLoadingTx(fundId);
+      try {
+        const res = await fetch(`${API_BASE_URL}/mutual-funds/${fundId}/transactions`, {
+          headers: getAuthHeaders(),
+        });
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data: MutualFundTransaction[] = await res.json();
+        // Sort newest first
+        data.sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+        setTransactions((prev) => ({ ...prev, [fundId]: data }));
+      } catch {
+        toast.error("Could not load transaction history");
+        setExpandedFundId(null);
+      } finally {
+        setLoadingTx(null);
+      }
     }
   };
 
@@ -91,6 +136,10 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
           const palette = FUND_COLORS[idx % FUND_COLORS.length];
           const currentValue = fund.units * fund.nav;
           const sharePercent = totalValue > 0 ? (currentValue / totalValue) * 100 : 0;
+          const isExpanded = expandedFundId === fund.id;
+          const fundTxs = transactions[fund.id] || [];
+          const isLoading = loadingTx === fund.id;
+          const totalInvested = fundTxs.reduce((sum, tx) => sum + tx.units * tx.nav, 0);
 
           return (
             <div
@@ -135,7 +184,7 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
                   >
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <BarChart2 className="h-3 w-3" style={{ color: palette.text }} />
-                      <span className="text-xs text-muted-foreground">NAV</span>
+                      <span className="text-xs text-muted-foreground">Avg NAV</span>
                     </div>
                     <p className="text-sm font-bold" style={{ color: palette.text }}>₹{fund.nav.toFixed(2)}</p>
                   </div>
@@ -194,8 +243,106 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                    onClick={() => toggleExpand(fund.id)}
+                  >
+                    {isExpanded ? (
+                      <><ChevronUp className="h-3.5 w-3.5 mr-1" />Hide</>
+                    ) : (
+                      <><ChevronDown className="h-3.5 w-3.5 mr-1" />History</>
+                    )}
+                  </Button>
                 </div>
               </div>
+
+              {/* Transaction History Panel */}
+              {isExpanded && (
+                <div
+                  className="border-t border-border/40 bg-muted/20 px-4 py-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Transaction History
+                      </span>
+                    </div>
+                    {fundTxs.length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {fundTxs.length} purchase{fundTxs.length !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
+
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground text-xs">
+                      <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                      Loading transactions…
+                    </div>
+                  ) : fundTxs.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">No transactions found.</p>
+                  ) : (
+                    <>
+                      {/* Summary row */}
+                      <div
+                        className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold"
+                        style={{ background: palette.light, border: `1px solid ${palette.border}` }}
+                      >
+                        <span style={{ color: palette.text }}>Total Invested</span>
+                        <span style={{ color: palette.text }}>
+                          ₹{totalInvested.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                          &nbsp;·&nbsp;{fund.units.toFixed(3)} units
+                        </span>
+                      </div>
+
+                      {/* Table header */}
+                      <div className="grid grid-cols-4 gap-2 px-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground col-span-2">Date</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">Units</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">Amount</span>
+                      </div>
+
+                      {/* Transaction rows */}
+                      <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        {fundTxs.map((tx, txIdx) => (
+                          <div
+                            key={tx.id}
+                            className="grid grid-cols-4 gap-2 items-center rounded-xl px-3 py-2.5 bg-background/60 border border-border/40 hover:border-border/70 transition-colors"
+                          >
+                            <div className="col-span-2 flex items-center gap-2">
+                              <div
+                                className="h-6 w-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ background: palette.light }}
+                              >
+                                <ArrowDownRight className="h-3 w-3" style={{ color: palette.text }} />
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-foreground">
+                                  {new Date(tx.purchaseDate).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">NAV ₹{tx.nav.toFixed(2)}</p>
+                              </div>
+                            </div>
+                            <p className="text-xs font-bold text-right" style={{ color: palette.text }}>
+                              {tx.units.toFixed(3)}
+                            </p>
+                            <p className="text-xs font-bold text-right text-foreground">
+                              ₹{(tx.units * tx.nav).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}

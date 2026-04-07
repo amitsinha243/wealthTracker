@@ -73,18 +73,27 @@ public class FixedDepositController {
         LocalDate currentMonth = processFrom;
         LocalDate lastProcessedMonth = null;
         while (!currentMonth.isAfter(processUntil.withDayOfMonth(1))) {
-            // Deduct this month's installment from savings account
-            savingsAccount.setBalance(savingsAccount.getBalance() - deposit.getAmount());
+            // Check if an expense for this deposit and month already exists (idempotent guard)
+            LocalDate monthStart = currentMonth.withDayOfMonth(1);
+            LocalDate monthEnd = currentMonth.withDayOfMonth(currentMonth.lengthOfMonth());
+            boolean alreadyExists = deposit.getId() != null &&
+                    expenseRepository.existsBySourceDepositIdAndDateBetween(deposit.getId(), monthStart, monthEnd);
 
-            // Create an expense record for this installment
-            Expense rdExpense = new Expense();
-            rdExpense.setUserId(userId);
-            rdExpense.setCategory("RD Installment");
-            rdExpense.setAmount(deposit.getAmount());
-            rdExpense.setDate(currentMonth);
-            rdExpense.setDescription("RD installment of " + deposit.getAmount() + " from " + deposit.getBankName());
-            rdExpense.setSavingsAccountId(deposit.getSavingsAccountId());
-            expenseRepository.save(rdExpense);
+            if (!alreadyExists) {
+                // Deduct this month's installment from savings account
+                savingsAccount.setBalance(savingsAccount.getBalance() - deposit.getAmount());
+
+                // Create an expense record for this installment
+                Expense rdExpense = new Expense();
+                rdExpense.setUserId(userId);
+                rdExpense.setCategory("RD Installment");
+                rdExpense.setAmount(deposit.getAmount());
+                rdExpense.setDate(currentMonth);
+                rdExpense.setDescription("RD installment of " + deposit.getAmount() + " from " + deposit.getBankName());
+                rdExpense.setSavingsAccountId(deposit.getSavingsAccountId());
+                rdExpense.setSourceDepositId(deposit.getId());
+                expenseRepository.save(rdExpense);
+            }
 
             lastProcessedMonth = currentMonth;
             currentMonth = currentMonth.plusMonths(1);
@@ -113,31 +122,38 @@ public class FixedDepositController {
             SavingsAccount savingsAccount = savingsAccountRepository.findById(deposit.getSavingsAccountId())
                     .orElse(null);
             if (savingsAccount != null && savingsAccount.getUserId().equals(userId)) {
-                // Deduct first installment
-                savingsAccount.setBalance(savingsAccount.getBalance() - deposit.getAmount());
-                savingsAccount.setUpdatedAt(LocalDate.now());
-                savingsAccountRepository.save(savingsAccount);
-
-                // Set last deduction date to start date's month
+                // Set last deduction date to start date's month before saving
                 LocalDate startDate = deposit.getStartDate() != null ? deposit.getStartDate() : LocalDate.now();
                 deposit.setLastDeductionDate(startDate.withDayOfMonth(1));
 
-                // Create an expense record for the first installment
+                // Save the deposit first so it gets an ID
+                FixedDeposit savedDeposit = fixedDepositRepository.save(deposit);
+
+                // Deduct first installment
+                savingsAccount.setBalance(savingsAccount.getBalance() - savedDeposit.getAmount());
+                savingsAccount.setUpdatedAt(LocalDate.now());
+                savingsAccountRepository.save(savingsAccount);
+
+                // Create an expense record for the first installment, tagged with the deposit ID
                 Expense firstInstallment = new Expense();
                 firstInstallment.setUserId(userId);
                 firstInstallment.setCategory("RD Installment");
-                firstInstallment.setAmount(deposit.getAmount());
+                firstInstallment.setAmount(savedDeposit.getAmount());
                 firstInstallment.setDate(startDate);
-                firstInstallment
-                        .setDescription("RD installment of " + deposit.getAmount() + " from " + deposit.getBankName());
-                firstInstallment.setSavingsAccountId(deposit.getSavingsAccountId());
+                firstInstallment.setDescription("RD installment of " + savedDeposit.getAmount() + " from " + savedDeposit.getBankName());
+                firstInstallment.setSavingsAccountId(savedDeposit.getSavingsAccountId());
+                firstInstallment.setSourceDepositId(savedDeposit.getId());
                 expenseRepository.save(firstInstallment);
+
+                logger.info("New deposit created: {} (Type: {})", savedDeposit.getBankName(), savedDeposit.getDepositType());
+                return ResponseEntity.ok(savedDeposit);
             }
         }
 
         logger.info("New deposit created: {} (Type: {})", deposit.getBankName(), deposit.getDepositType());
         return ResponseEntity.ok(fixedDepositRepository.save(deposit));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<FixedDeposit> update(@PathVariable String id, @RequestBody FixedDeposit deposit,

@@ -22,7 +22,7 @@ const App = () => (
       <Route path="/physical-assets" element={<ProtectedRoute><PhysicalAssets /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
-    <Toaster richColors position="top-right" />
+    <Toaster richColors position="top-center" />
   </Router>
 );
 
