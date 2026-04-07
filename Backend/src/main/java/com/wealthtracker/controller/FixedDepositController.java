@@ -6,17 +6,20 @@ import com.wealthtracker.model.SavingsAccount;
 import com.wealthtracker.repository.ExpenseRepository;
 import com.wealthtracker.repository.FixedDepositRepository;
 import com.wealthtracker.repository.SavingsAccountRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/fixed-deposits")
 public class FixedDepositController {
+
+    private static final Logger logger = LoggerFactory.getLogger(FixedDepositController.class);
 
     private final FixedDepositRepository fixedDepositRepository;
     private final SavingsAccountRepository savingsAccountRepository;
@@ -101,7 +104,7 @@ public class FixedDepositController {
     @PostMapping
     public ResponseEntity<FixedDeposit> create(@RequestBody FixedDeposit deposit, Authentication auth) {
         String userId = (String) auth.getPrincipal();
-        System.out.println("UserID -> " + userId);
+        logger.debug("Creating deposit for user: {}", userId);
         deposit.setUserId(userId);
         deposit.setUpdatedAt(LocalDate.now());
 
@@ -132,7 +135,7 @@ public class FixedDepositController {
             }
         }
 
-        System.out.println("Deposit -> " + deposit);
+        logger.info("New deposit created: {} (Type: {})", deposit.getBankName(), deposit.getDepositType());
         return ResponseEntity.ok(fixedDepositRepository.save(deposit));
     }
 

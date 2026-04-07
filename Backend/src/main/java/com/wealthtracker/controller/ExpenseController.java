@@ -4,6 +4,8 @@ import com.wealthtracker.model.Expense;
 import com.wealthtracker.model.SavingsAccount;
 import com.wealthtracker.repository.ExpenseRepository;
 import com.wealthtracker.repository.SavingsAccountRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,8 @@ import java.util.List;
 @RequestMapping("/api/expenses")
 public class ExpenseController {
     
+    private static final Logger logger = LoggerFactory.getLogger(ExpenseController.class);
+
     private final ExpenseRepository expenseRepository;
     private final SavingsAccountRepository savingsAccountRepository;
     
@@ -25,7 +29,6 @@ public class ExpenseController {
 
     @GetMapping
     public ResponseEntity<List<Expense>> getAll(Authentication auth) {
-        System.out.println("Authenticated user: " + auth.getPrincipal());
         String userId = (String) auth.getPrincipal();
         return ResponseEntity.ok(expenseRepository.findByUserId(userId));
     }
@@ -33,6 +36,7 @@ public class ExpenseController {
     @PostMapping
     public ResponseEntity<Expense> create(@RequestBody Expense expense, Authentication auth) {
         String userId = (String) auth.getPrincipal();
+        logger.info("Creating expense: {} (Amount: {})", expense.getCategory(), expense.getAmount());
         expense.setUserId(userId);
         expense.setUpdatedAt(LocalDate.now());
         
@@ -97,6 +101,7 @@ public class ExpenseController {
             }
         }
         
+        logger.info("Deleting expense with ID: {}", id);
         expenseRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }
