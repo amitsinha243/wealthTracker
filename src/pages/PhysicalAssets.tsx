@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Footer } from "@/components/Footer";
 import { AddPhysicalAssetDialog } from "@/components/AddPhysicalAssetDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -87,6 +88,7 @@ const PhysicalAssets = () => {
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Add Asset</span>
               </Button>
+              <NotificationBell />
               <NavigationMenu />
             </div>
           </div>

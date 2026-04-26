@@ -13,6 +13,7 @@ import { AddIncomeDialog } from "@/components/AddIncomeDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { NotificationBell } from "@/components/NotificationBell";
 import { SavingsAccountDetails } from "@/components/SavingsAccountDetails";
 import { MutualFundDetails } from "@/components/MutualFundDetails";
 import { FixedDepositDetails } from "@/components/FixedDepositDetails";
@@ -207,7 +208,8 @@ const Index = () => {
                   ₹{totalAssets.toLocaleString('en-IN')}
                 </p>
               </div>
-              <div className="shrink-0">
+              <div className="shrink-0 flex items-center gap-2">
+                <NotificationBell />
                 <NavigationMenu />
               </div>
             </div>

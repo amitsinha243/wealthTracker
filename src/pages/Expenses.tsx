@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Footer } from "@/components/Footer";
 import { EditExpenseDialog } from "@/components/EditExpenseDialog";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
@@ -299,6 +300,7 @@ const Expenses = () => {
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">New Expense</span>
               </Button>
+              <NotificationBell />
               <NavigationMenu />
             </div>
           </div>

@@ -14,7 +14,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -78,5 +80,43 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+    }
+
+    /**
+     * Search registered users by email prefix for adding to expense books.
+     * Returns id, email, name only (never password).
+     */
+    @GetMapping("/search-users")
+    public ResponseEntity<List<Map<String, String>>> searchUsers(
+            @RequestParam String email, HttpServletRequest request) {
+        // Verify authentication
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).build();
+        }
+        String token = authHeader.substring(7);
+        if (!jwtUtil.isTokenValid(token)) {
+            return ResponseEntity.status(401).build();
+        }
+
+        if (email == null || email.trim().length() < 2) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        String currentUserId = jwtUtil.extractUserId(token);
+        String searchTerm = email.trim().toLowerCase();
+
+        // Find all users, filter by email containing the search term, exclude current user
+        List<Map<String, String>> results = userRepository.findAll().stream()
+                .filter(u -> u.getEmail().toLowerCase().contains(searchTerm))
+                .filter(u -> !u.getId().equals(currentUserId))
+                .limit(10)
+                .map(u -> Map.of(
+                        "id", u.getId(),
+                        "email", u.getEmail(),
+                        "name", u.getName()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(results);
     }
 }

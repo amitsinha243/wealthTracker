@@ -464,3 +464,150 @@ export const tripAPI = {
     if (!response.ok) throw new Error('Failed to delete expense');
   }
 };
+
+// -------------------- Expense Book API --------------------
+export const expenseBookAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/expense-books`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch expense books');
+    return response.json();
+  },
+
+  create: async (data: any) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to create expense book');
+    return response.json();
+  },
+
+  update: async (id: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update expense book');
+    return response.json();
+  },
+
+  delete: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete expense book');
+  },
+
+  addMember: async (bookId: string, email: string) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books/${bookId}/members`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ email })
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to add member');
+    }
+    return response.json();
+  },
+
+  removeMember: async (bookId: string, userId: string) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books/${bookId}/members/${userId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to remove member');
+    }
+    return response.json();
+  },
+
+  getExpenses: async (bookId: string) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books/${bookId}/expenses`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch expenses');
+    return response.json();
+  },
+
+  addExpense: async (bookId: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books/${bookId}/expenses`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to add expense');
+    return response.json();
+  },
+
+  updateExpense: async (bookId: string, expenseId: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books/${bookId}/expenses/${expenseId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update expense');
+    return response.json();
+  },
+
+  deleteExpense: async (bookId: string, expenseId: string) => {
+    const response = await fetch(`${API_BASE_URL}/expense-books/${bookId}/expenses/${expenseId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete expense');
+  }
+};
+
+// -------------------- Notification API --------------------
+export const notificationAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/notifications`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch notifications');
+    return response.json();
+  },
+
+  getUnreadCount: async () => {
+    const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch unread count');
+    return response.json();
+  },
+
+  markAsRead: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to mark notification as read');
+    return response.json();
+  },
+
+  markAllAsRead: async () => {
+    const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to mark all as read');
+  }
+};
+
+// -------------------- User Search API --------------------
+export const userSearchAPI = {
+  searchByEmail: async (email: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/search-users?email=${encodeURIComponent(email)}`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to search users');
+    return response.json();
+  }
+};

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Menu, LayoutGrid, FileText, LogOut, Plane, Bot, Home } from "lucide-react";
+import { Menu, LayoutGrid, FileText, LogOut, Plane, Bot, Home, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +30,7 @@ export const NavigationMenu = () => {
           <NavItem to="/assets" icon={LayoutGrid} label="All Assets" color="bg-indigo-500" />
           <NavItem to="/expenses" icon={FileText} label="All Expenses" color="bg-rose-500" />
           <NavItem to="/trips" icon={Plane} label="Trip Expenses" color="bg-emerald-500" />
+          <NavItem to="/expense-books" icon={BookOpen} label="Split Expense" color="bg-teal-500" />
           <NavItem to="/physical-assets" icon={Home} label="Physical Assets" color="bg-amber-500" />
           <NavItem to="/ai-assistant" icon={Bot} label="AI Assistant" color="bg-violet-500" />
 

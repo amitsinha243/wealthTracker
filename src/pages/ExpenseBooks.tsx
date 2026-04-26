@@ -1,28 +1,28 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plane, ArrowLeft, Plus } from "lucide-react";
+import { BookOpen, ArrowLeft, Plus, Crown, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTrips } from "@/hooks/useTrips";
+import { useExpenseBooks } from "@/hooks/useExpenseBooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Footer } from "@/components/Footer";
-import { AddTripDialog } from "@/components/AddTripDialog";
-import { TripDetails } from "@/components/TripDetails";
+import { AddExpenseBookDialog } from "@/components/AddExpenseBookDialog";
+import { ExpenseBookDetails } from "@/components/ExpenseBookDetails";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-const Trips = () => {
+const ExpenseBooks = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { trips, loading: tripsLoading } = useTrips();
-  const [showAddTrip, setShowAddTrip] = useState(false);
-  const [selectedTrip, setSelectedTrip] = useState<any>(null);
+  const { expenseBooks, loading: booksLoading } = useExpenseBooks();
+  const [showAddBook, setShowAddBook] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<any>(null);
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      navigate("/auth");
     }
   }, [user, loading, navigate]);
 
@@ -47,20 +47,22 @@ const Trips = () => {
               </Button>
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/80 shrink-0">
-                  <Plane className="h-5 w-5 sm:h-6 w-6 text-primary-foreground" />
+                  <BookOpen className="h-5 w-5 sm:h-6 w-6 text-primary-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tighter truncate uppercase">Trip Expenses</h1>
+                  <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tighter truncate uppercase">
+                    Expense Books
+                  </h1>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Button 
-                onClick={() => setShowAddTrip(true)}
+              <Button
+                onClick={() => setShowAddBook(true)}
                 className="bg-primary hover:bg-primary/90 font-bold px-3 sm:px-4"
               >
                 <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">New Trip</span>
+                <span className="hidden sm:inline">New Book</span>
               </Button>
               <NotificationBell />
               <NavigationMenu />
@@ -71,59 +73,66 @@ const Trips = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {tripsLoading ? (
-          <div className="text-center text-muted-foreground">Loading trips...</div>
-        ) : trips.length === 0 ? (
+        {booksLoading ? (
+          <div className="text-center text-muted-foreground">Loading expense books...</div>
+        ) : expenseBooks.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <Plane className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No trips yet</h3>
+              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No expense books yet</h3>
               <p className="text-muted-foreground mb-4">
-                Create your first trip to start tracking expenses
+                Create a shared expense book to start splitting costs with friends
               </p>
-              <Button onClick={() => setShowAddTrip(true)}>
+              <Button onClick={() => setShowAddBook(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Trip
+                Create Expense Book
               </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {trips.map((trip) => (
-              <Card 
-                key={trip.id} 
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setSelectedTrip(trip)}
+            {expenseBooks.map((book) => (
+              <Card
+                key={book.id}
+                className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/30 group"
+                onClick={() => setSelectedBook(book)}
               >
                 <CardHeader>
-                  <CardTitle className="text-lg">{trip.tripName}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{trip.destination}</p>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Participants:</span>
-                    <Badge variant="secondary">{trip.participants?.length || 0}</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {trip.participants?.slice(0, 3).map((participant: string, idx: number) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {participant}
-                      </Badge>
-                    ))}
-                    {trip.participants && trip.participants.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{trip.participants.length - 3}
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                      {book.name}
+                    </CardTitle>
+                    {book.createdBy === user.id && (
+                      <Badge variant="outline" className="text-xs flex items-center gap-1 shrink-0">
+                        <Crown className="h-3 w-3 text-amber-500" />
+                        Owner
                       </Badge>
                     )}
                   </div>
-                  {trip.startDate && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Start Date:</span>
-                      <span className="font-medium">
-                        {new Date(trip.startDate).toLocaleDateString()}
-                      </span>
-                    </div>
+                  {book.description && (
+                    <p className="text-sm text-muted-foreground">{book.description}</p>
                   )}
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5" />
+                      Members:
+                    </span>
+                    <Badge variant="secondary">{book.memberNames?.length || 0}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {book.memberNames?.slice(0, 3).map((name: string, idx: number) => (
+                      <Badge key={idx} variant="outline" className="text-xs">
+                        {name}
+                      </Badge>
+                    ))}
+                    {book.memberNames && book.memberNames.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{book.memberNames.length - 3}
+                      </Badge>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -133,16 +142,16 @@ const Trips = () => {
 
       <Footer />
 
-      {/* Add Trip Dialog */}
-      <AddTripDialog open={showAddTrip} onOpenChange={setShowAddTrip} />
+      {/* Add Expense Book Dialog */}
+      <AddExpenseBookDialog open={showAddBook} onOpenChange={setShowAddBook} />
 
-      {/* Trip Details Dialog */}
-      <Dialog open={!!selectedTrip} onOpenChange={() => setSelectedTrip(null)}>
+      {/* Expense Book Details Dialog */}
+      <Dialog open={!!selectedBook} onOpenChange={() => setSelectedBook(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          {selectedTrip && (
-            <TripDetails 
-              trip={selectedTrip} 
-              onClose={() => setSelectedTrip(null)} 
+          {selectedBook && (
+            <ExpenseBookDetails
+              book={selectedBook}
+              onClose={() => setSelectedBook(null)}
             />
           )}
         </DialogContent>
@@ -151,4 +160,4 @@ const Trips = () => {
   );
 };
 
-export default Trips;
+export default ExpenseBooks;

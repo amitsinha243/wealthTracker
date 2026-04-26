@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Footer } from "@/components/Footer";
 import { Progress } from "@/components/ui/progress";
 
@@ -112,6 +113,7 @@ const Assets = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <NotificationBell />
                 <NavigationMenu />
               </div>
             </div>

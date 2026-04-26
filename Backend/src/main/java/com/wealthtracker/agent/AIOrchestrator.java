@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * AI Orchestrator — central router that delegates to the three specialized agents.
- * Also handles the conversational chat mode (with lightweight context injection).
+ * AI Orchestrator — central router that delegates to the three specialized
+ * agents.
+ * Also handles the conversational chat mode (with lightweight context
+ * injection).
  */
 @Service
 @Slf4j
@@ -51,7 +53,8 @@ public class AIOrchestrator {
     }
 
     /**
-     * Run both analysis agents, then pass their reports to the Recommendation Agent.
+     * Run both analysis agents, then pass their reports to the Recommendation
+     * Agent.
      */
     public String generateRecommendations(String userId) {
         log.info("Running full agent pipeline for recommendations, user: {}", userId);
@@ -72,13 +75,12 @@ public class AIOrchestrator {
                     The user's financial summary is provided below. Answer their questions concisely
                     and accurately, using the data provided. Format monetary values with ₹.
                     If you cannot answer something from the data, say so clearly.
-                    
+
                     """ + context;
 
             Prompt prompt = new Prompt(List.of(
                     new SystemMessage(systemPrompt),
-                    new UserMessage(userMessage)
-            ));
+                    new UserMessage(userMessage)));
 
             return chatModel.call(prompt).getResult().getOutput().getContent();
         } catch (Exception e) {

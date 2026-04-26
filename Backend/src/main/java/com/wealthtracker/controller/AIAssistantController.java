@@ -15,10 +15,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(
-        origins = {"http://localhost:5173", "https://amitsinha243.github.io/wealthTracker"},
-        allowCredentials = "true"
-)
+@CrossOrigin(origins = { "http://localhost:5173",
+        "https://amitsinha243.github.io/wealthTracker" }, allowCredentials = "true")
 public class AIAssistantController {
 
     private final AIAssistantService aiAssistantService;
@@ -39,7 +37,7 @@ public class AIAssistantController {
         } catch (Exception e) {
             log.error("Error processing AI chat: ", e);
             return ResponseEntity.internalServerError()
-                .body(new ChatResponse("Sorry, I encountered an error. Please try again."));
+                    .body(new ChatResponse("Sorry, I encountered an error. Please try again."));
         }
     }
 
@@ -53,7 +51,8 @@ public class AIAssistantController {
         } catch (Exception e) {
             log.error("Error in portfolio analysis: ", e);
             return ResponseEntity.internalServerError()
-                .body(new AgentReportResponse("InvestmentAnalysisAgent", "Unable to generate report. Please try again."));
+                    .body(new AgentReportResponse("InvestmentAnalysisAgent",
+                            "Unable to generate report. Please try again."));
         }
     }
 
@@ -67,7 +66,8 @@ public class AIAssistantController {
         } catch (Exception e) {
             log.error("Error in expense analysis: ", e);
             return ResponseEntity.internalServerError()
-                .body(new AgentReportResponse("ExpenseAnalysisAgent", "Unable to generate report. Please try again."));
+                    .body(new AgentReportResponse("ExpenseAnalysisAgent",
+                            "Unable to generate report. Please try again."));
         }
     }
 
@@ -81,7 +81,8 @@ public class AIAssistantController {
         } catch (Exception e) {
             log.error("Error in recommendations: ", e);
             return ResponseEntity.internalServerError()
-                .body(new AgentReportResponse("InvestmentRecommendationAgent", "Unable to generate recommendations. Please try again."));
+                    .body(new AgentReportResponse("InvestmentRecommendationAgent",
+                            "Unable to generate recommendations. Please try again."));
         }
     }
 }

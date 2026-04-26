@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -360,6 +361,7 @@ const AIAssistant = () => {
                   Live
                 </p>
               </div>
+              <NotificationBell />
               <NavigationMenu />
             </div>
           </div>
