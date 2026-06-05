@@ -21,10 +21,41 @@ interface AuthContextType {
   logout: () => void;
 }
 
+const decodeJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
+
+const isTokenExpired = (token: string): boolean => {
+  if (!token) return true;
+  const decoded = decodeJwt(token);
+  if (!decoded || typeof decoded.exp !== 'number') return true;
+  // exp is in seconds, Date.now() is in milliseconds.
+  // Add a 10 second safety buffer
+  return Date.now() >= (decoded.exp * 1000) - 10000;
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken && isTokenExpired(storedToken)) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+      return null;
+    }
     const storedUser = localStorage.getItem('currentUser');
     try {
       return storedUser ? JSON.parse(storedUser) : null;
@@ -32,10 +63,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return null;
     }
   });
+
   const [loading, setLoading] = useState(() => {
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken && isTokenExpired(storedToken)) {
+      return false;
+    }
     // If we have no token, we aren't loading, we're just logged out.
     // This allows immediate redirect to /auth without showing a spinner.
-    return !!localStorage.getItem('authToken');
+    return !!storedToken;
   });
 
   useEffect(() => {
@@ -43,10 +79,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const storedToken = localStorage.getItem('authToken');
       const storedUser = localStorage.getItem('currentUser');
 
-      if (!storedToken || !storedUser) {
+      if (!storedToken || !storedUser || isTokenExpired(storedToken)) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        setUser(null);
         setLoading(false);
         return;
       }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s timeout for backend cold starts
 
       try {
         // Validate the token against the backend
@@ -55,7 +97,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${storedToken}`
-          }
+          },
+          signal: controller.signal
         });
 
         if (response.ok) {
@@ -72,10 +115,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(JSON.parse(storedUser));
         }
       } catch {
-        // Network error (server down, no internet, CORS) — trust local session
-        // so the user isn't logged out just because the server is temporarily unreachable
+        // Network error/timeout — trust local session to avoid blocking the user
         setUser(JSON.parse(storedUser));
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
       }
     };
