@@ -224,7 +224,7 @@ const Index = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Your Assets</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="space-y-4">
               <AssetCard
                 title="Deposits"

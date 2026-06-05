@@ -9,6 +9,7 @@ export interface Expense {
   date: string;
   description?: string;
   savingsAccountId?: string;
+  createdAt?: string;
 }
 
 export const useExpenses = () => {

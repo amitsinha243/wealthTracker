@@ -57,6 +57,7 @@ export interface Expense {
 export const EXPENSE_CATEGORIES = [
   'Investments',
   'Subscriptions',
+  'Credit Card',
   'Groceries',
   'Bike',
   'Car',

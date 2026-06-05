@@ -70,7 +70,7 @@ export const AssetCard = ({
         </div>
 
         {/* Main amount */}
-        <p className="text-2xl font-bold text-foreground leading-tight mb-1">
+        <p className="text-xl sm:text-2xl font-bold text-foreground leading-tight mb-1 truncate">
           ₹{amount.toLocaleString("en-IN")}
         </p>
 
@@ -93,19 +93,19 @@ export const AssetCard = ({
         {/* This month vs last month */}
         {thisMonth !== undefined && lastMonth !== undefined && (
           <div className="grid grid-cols-2 gap-2 mb-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">This month</p>
               <p
-                className="text-sm font-semibold"
+                className="text-xs sm:text-sm font-semibold truncate"
                 style={{ color: thisMonth < 0 ? "#ef4444" : accentColor }}
               >
                 {thisMonth < 0 ? `-₹${Math.abs(thisMonth).toLocaleString("en-IN")}` : `₹${thisMonth.toLocaleString("en-IN")}`}
               </p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Last month</p>
               <p
-                className="text-sm font-semibold"
+                className="text-xs sm:text-sm font-semibold truncate"
                 style={{ color: lastMonth < 0 ? "#ef4444" : undefined }}
               >
                 {lastMonth < 0 ? `-₹${Math.abs(lastMonth).toLocaleString("en-IN")}` : `₹${lastMonth.toLocaleString("en-IN")}`}
@@ -118,7 +118,7 @@ export const AssetCard = ({
         {momDelta !== undefined && (
           <div className="flex items-center gap-1.5 mb-3">
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium max-w-full truncate"
               style={
                 momDelta === 0
                   ? { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }
@@ -128,15 +128,17 @@ export const AssetCard = ({
               }
             >
               {momDelta === 0 ? (
-                <Minus className="h-3 w-3" />
+                <Minus className="h-3 w-3 shrink-0" />
               ) : momPositive ? (
-                <TrendingUp className="h-3 w-3" />
+                <TrendingUp className="h-3 w-3 shrink-0" />
               ) : (
-                <TrendingDown className="h-3 w-3" />
+                <TrendingDown className="h-3 w-3 shrink-0" />
               )}
-              {momDelta === 0
-                ? "No change"
-                : `${momPositive ? "+" : ""}₹${Math.abs(momDelta).toLocaleString("en-IN")} vs last month`}
+              <span className="truncate">
+                {momDelta === 0
+                  ? "No change"
+                  : `${momPositive ? "+" : ""}₹${Math.abs(momDelta).toLocaleString("en-IN")} vs last month`}
+              </span>
             </span>
           </div>
         )}

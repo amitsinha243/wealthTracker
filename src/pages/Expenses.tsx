@@ -107,10 +107,15 @@ const Expenses = () => {
       const account = savingsAccounts.find(a => a.id === accountId);
       if (!account) continue;
 
-      // Sort ascending by date (oldest first)
-      const sorted = [...accountExpenses].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
+      // Sort ascending by date (oldest first), then by createdAt for same-day expenses
+      const sorted = [...accountExpenses].sort((a, b) => {
+        const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
+        if (dateDiff !== 0) return dateDiff;
+        // Same date: sort by createdAt timestamp (insertion order)
+        const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aCreated - bCreated;
+      });
 
       // Walk from newest to oldest: most recent expense gets the current balance,
       // each older expense gets balance + sum of all newer expenses
@@ -190,9 +195,14 @@ const Expenses = () => {
   const filteredTotal = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   const isFiltered = categoryFilter !== "all" || bankAccountFilter !== "all" || dateRangeFilter !== "all";
 
-  const sortedExpenses = [...filteredExpenses].sort((a, b) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sortedExpenses = [...filteredExpenses].sort((a, b) => {
+    const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (dateDiff !== 0) return dateDiff;
+    // Same date: sort by createdAt descending (newest first)
+    const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bCreated - aCreated;
+  });
 
   const expensesByMonth = sortedExpenses.reduce((acc, expense) => {
     const monthYear = new Date(expense.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });

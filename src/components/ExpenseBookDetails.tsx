@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { Trash2, Plus, Users, Receipt, Edit2, UserMinus, UserPlus, Search, Crown, Loader2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Trash2, Plus, Users, Receipt, Edit2, UserMinus, UserPlus, Search, Crown, Loader2, CalendarDays, ArrowRightLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExpenseBooks } from "@/hooks/useExpenseBooks";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,11 @@ interface SearchResult {
   name: string;
 }
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
 export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) => {
   const { getExpenses, deleteExpense, deleteExpenseBook, addMember, removeMember } = useExpenseBooks();
   const { user } = useAuth();
@@ -50,6 +56,11 @@ export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) =
   const [memberSearching, setMemberSearching] = useState(false);
   const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
 
+  // Month filter state — default to current month
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth());
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+
   const isCreator = book.createdBy === user?.id;
 
   useEffect(() => {
@@ -64,6 +75,61 @@ export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) =
       console.error("Failed to load expenses:", error);
     }
   };
+
+  // Derive available months from expenses
+  const availableMonths = useMemo(() => {
+    const monthSet = new Set<string>();
+    expenses.forEach((exp) => {
+      if (exp.expenseDate) {
+        const d = new Date(exp.expenseDate);
+        monthSet.add(`${d.getFullYear()}-${d.getMonth()}`);
+      }
+    });
+    // Always include the current filter month
+    monthSet.add(`${filterYear}-${filterMonth}`);
+    // Always include current month
+    monthSet.add(`${now.getFullYear()}-${now.getMonth()}`);
+
+    return Array.from(monthSet)
+      .map((key) => {
+        const [y, m] = key.split("-").map(Number);
+        return { year: y, month: m };
+      })
+      .sort((a, b) => b.year - a.year || b.month - a.month);
+  }, [expenses, filterMonth, filterYear]);
+
+  // Filter expenses by selected month
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((exp) => {
+      if (!exp.expenseDate) return false;
+      const d = new Date(exp.expenseDate);
+      return d.getMonth() === filterMonth && d.getFullYear() === filterYear;
+    });
+  }, [expenses, filterMonth, filterYear]);
+
+  // Navigate months
+  const goToPrevMonth = () => {
+    if (filterMonth === 0) {
+      setFilterMonth(11);
+      setFilterYear(filterYear - 1);
+    } else {
+      setFilterMonth(filterMonth - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (filterMonth === 11) {
+      setFilterMonth(0);
+      setFilterYear(filterYear + 1);
+    } else {
+      setFilterMonth(filterMonth + 1);
+    }
+  };
+
+  // Next month's 1st date for the settlement overview label
+  const nextMonth = filterMonth === 11 ? 0 : filterMonth + 1;
+  const nextMonthYear = filterMonth === 11 ? filterYear + 1 : filterYear;
+  const settlementDateLabel = `1st ${MONTH_NAMES[nextMonth]} ${nextMonthYear}`;
 
   const handleDeleteExpense = async () => {
     if (!deleteExpenseId) return;
@@ -143,21 +209,40 @@ export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) =
     }
   };
 
-  // Calculate settlements
-  const calculateSettlements = () => {
-    const totalExpense = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  // Calculate settlements based on filtered (monthly) expenses
+  const calculateSettlements = (expenseList: any[]) => {
+    const totalExpense = expenseList.reduce((sum, exp) => sum + exp.amount, 0);
     const memberCount = book.memberNames?.length || 1;
     const perPersonShare = totalExpense / memberCount;
 
+    // Per-member balance: positive = is owed money, negative = owes money
     const balances: { [key: string]: number } = {};
     (book.memberNames || []).forEach((name: string) => {
       balances[name] = -perPersonShare;
     });
 
-    expenses.forEach((expense) => {
+    expenseList.forEach((expense) => {
       balances[expense.paidBy] = (balances[expense.paidBy] || 0) + expense.amount;
     });
 
+    // Per-member paid amounts
+    const paidAmounts: { [key: string]: number } = {};
+    (book.memberNames || []).forEach((name: string) => {
+      paidAmounts[name] = 0;
+    });
+    expenseList.forEach((expense) => {
+      paidAmounts[expense.paidBy] = (paidAmounts[expense.paidBy] || 0) + expense.amount;
+    });
+
+    // Build member overview
+    const memberOverview = (book.memberNames || []).map((name: string) => ({
+      name,
+      paid: paidAmounts[name] || 0,
+      share: perPersonShare,
+      balance: balances[name] || 0,
+    }));
+
+    // Compute minimal settlements
     const creditors = Object.entries(balances)
       .filter(([_, balance]) => balance > 0.01)
       .sort((a, b) => b[1] - a[1]);
@@ -185,10 +270,10 @@ export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) =
       if (Math.abs(debtors[j][1] as number) < 0.01) j++;
     }
 
-    return { totalExpense, perPersonShare, settlements };
+    return { totalExpense, perPersonShare, settlements, memberOverview };
   };
 
-  const { totalExpense, perPersonShare, settlements } = calculateSettlements();
+  const { totalExpense, perPersonShare, settlements, memberOverview } = calculateSettlements(filteredExpenses);
 
   return (
     <div className="space-y-6">
@@ -281,10 +366,32 @@ export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) =
         </CardContent>
       </Card>
 
-      {/* Summary */}
+      {/* ─── Month Filter ─── */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="py-3">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="icon" onClick={goToPrevMonth} className="h-8 w-8">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              <span className="font-bold text-sm">
+                {MONTH_NAMES[filterMonth]} {filterYear}
+              </span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={goToNextMonth} className="h-8 w-8">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary for selected month */}
       <Card>
         <CardHeader>
-          <CardTitle>Summary</CardTitle>
+          <CardTitle className="text-base">
+            Monthly Summary — {MONTH_NAMES[filterMonth]} {filterYear}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex justify-between">
@@ -298,11 +405,76 @@ export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) =
         </CardContent>
       </Card>
 
+      {/* ─── Member Overview — Due on 1st of next month ─── */}
+      {memberOverview.length > 0 && totalExpense > 0 && (
+        <Card className="border-amber-500/30 bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ArrowRightLeft className="h-4 w-4 text-amber-600" />
+              Settlement Overview
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Amounts due / receivable on <span className="font-semibold text-foreground">{settlementDateLabel}</span>
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {memberOverview.map((member, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 rounded-xl bg-background/80 border border-border/50"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                      member.balance > 0.01
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
+                        : member.balance < -0.01
+                        ? "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {member.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{member.name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Paid ₹{member.paid.toFixed(0)} · Share ₹{member.share.toFixed(0)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {member.balance > 0.01 ? (
+                      <div>
+                        <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                          +₹{member.balance.toFixed(2)}
+                        </p>
+                        <p className="text-[10px] text-emerald-600/70 font-medium">RECEIVABLE</p>
+                      </div>
+                    ) : member.balance < -0.01 ? (
+                      <div>
+                        <p className="text-sm font-bold text-rose-600 dark:text-rose-400">
+                          -₹{Math.abs(member.balance).toFixed(2)}
+                        </p>
+                        <p className="text-[10px] text-rose-600/70 font-medium">PAYABLE</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-sm font-bold text-muted-foreground">₹0.00</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">SETTLED</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Settlements */}
       {settlements.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Settlements</CardTitle>
+            <CardTitle className="text-base">How to Settle</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="max-h-48">
@@ -331,6 +503,7 @@ export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) =
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Receipt className="h-5 w-5" />
             Expenses
+            <Badge variant="outline" className="ml-1">{filteredExpenses.length}</Badge>
           </h3>
           <Button onClick={() => setShowAddExpense(true)} size="sm">
             <Plus className="h-4 w-4 mr-2" />
@@ -339,15 +512,17 @@ export const ExpenseBookDetails = ({ book, onClose }: ExpenseBookDetailsProps) =
         </div>
 
         <div>
-          {expenses.length === 0 ? (
+          {filteredExpenses.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
-                No expenses added yet
+                No expenses for {MONTH_NAMES[filterMonth]} {filterYear}
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-2">
-              {expenses.map((expense) => (
+              {filteredExpenses
+                .sort((a, b) => new Date(b.expenseDate).getTime() - new Date(a.expenseDate).getTime())
+                .map((expense) => (
                 <Card key={expense.id}>
                   <CardContent className="py-3">
                     <div className="flex justify-between items-start">
