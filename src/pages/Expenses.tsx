@@ -114,7 +114,9 @@ const Expenses = () => {
         // Same date: sort by createdAt timestamp (insertion order)
         const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return aCreated - bCreated;
+        if (aCreated !== bCreated) return aCreated - bCreated;
+        // Fallback: MongoDB ObjectIds are time-ordered
+        return a.id.localeCompare(b.id);
       });
 
       // Walk from newest to oldest: most recent expense gets the current balance,
@@ -201,7 +203,9 @@ const Expenses = () => {
     // Same date: sort by createdAt descending (newest first)
     const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return bCreated - aCreated;
+    if (aCreated !== bCreated) return bCreated - aCreated;
+    // Fallback: MongoDB ObjectIds are time-ordered, reverse for newest first
+    return b.id.localeCompare(a.id);
   });
 
   const expensesByMonth = sortedExpenses.reduce((acc, expense) => {
