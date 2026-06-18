@@ -114,19 +114,19 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
   return (
     <div className="space-y-5">
       {/* Section header */}
-      <div className="flex items-center justify-between pb-4 border-b border-border/60">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-blue-500/10">
+      <div className="flex items-center justify-between gap-2 pb-4 border-b border-border/60">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="p-2 rounded-xl bg-blue-500/10 shrink-0">
             <BarChart2 className="h-5 w-5 text-blue-500" />
           </div>
-          <div>
-            <h3 className="text-base font-semibold text-foreground">Mutual Funds</h3>
+          <div className="min-w-0">
+            <h3 className="text-sm sm:text-base font-semibold text-foreground">Mutual Funds</h3>
             <p className="text-xs text-muted-foreground">{funds.length} active investment{funds.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-right shrink-0">
           <p className="text-xs text-muted-foreground mb-0.5">Total Value</p>
-          <p className="text-2xl font-bold text-foreground">₹{totalValue.toLocaleString("en-IN")}</p>
+          <p className="text-lg sm:text-2xl font-bold text-foreground">₹{totalValue.toLocaleString("en-IN")}</p>
         </div>
       </div>
 
@@ -149,54 +149,54 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
               {/* Coloured top strip */}
               <div className={`h-1.5 w-full bg-gradient-to-r ${palette.bg}`} />
 
-              <div className="p-4 space-y-3">
+              <div className="p-3 sm:p-4 space-y-3">
                 {/* Fund name & value */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${palette.bg} flex-shrink-0`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 sm:gap-3 min-w-0">
+                    <div className={`p-2 sm:p-2.5 rounded-xl bg-gradient-to-br ${palette.bg} flex-shrink-0`}>
                       <TrendingUp className="h-4 w-4 text-white" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-foreground leading-tight truncate">{fund.fundName}</h4>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{fund.schemeName}</p>
+                      <h4 className="text-sm sm:text-base font-semibold text-foreground leading-tight truncate">{fund.fundName}</h4>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">{fund.schemeName}</p>
                     </div>
                   </div>
-                  <p className="text-xl font-bold text-foreground whitespace-nowrap">
+                  <p className="text-base sm:text-xl font-bold text-foreground whitespace-nowrap shrink-0">
                     ₹{currentValue.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                   </p>
                 </div>
 
                 {/* Stat grid */}
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <div
-                    className="rounded-xl p-2.5 text-center"
+                    className="rounded-xl p-1.5 sm:p-2.5 text-center"
                     style={{ background: palette.light, border: `1px solid ${palette.border}` }}
                   >
                     <div className="flex items-center justify-center gap-1 mb-1">
-                      <Hash className="h-3 w-3" style={{ color: palette.text }} />
-                      <span className="text-xs text-muted-foreground">Units</span>
+                      <Hash className="h-3 w-3 shrink-0" style={{ color: palette.text }} />
+                      <span className="text-[10px] sm:text-xs text-muted-foreground">Units</span>
                     </div>
-                    <p className="text-sm font-bold" style={{ color: palette.text }}>{fund.units.toFixed(3)}</p>
+                    <p className="text-xs sm:text-sm font-bold truncate" style={{ color: palette.text }}>{fund.units.toFixed(3)}</p>
                   </div>
                   <div
-                    className="rounded-xl p-2.5 text-center"
+                    className="rounded-xl p-1.5 sm:p-2.5 text-center"
                     style={{ background: palette.light, border: `1px solid ${palette.border}` }}
                   >
                     <div className="flex items-center justify-center gap-1 mb-1">
-                      <BarChart2 className="h-3 w-3" style={{ color: palette.text }} />
-                      <span className="text-xs text-muted-foreground">Avg NAV</span>
+                      <BarChart2 className="h-3 w-3 shrink-0" style={{ color: palette.text }} />
+                      <span className="text-[10px] sm:text-xs text-muted-foreground">NAV</span>
                     </div>
-                    <p className="text-sm font-bold" style={{ color: palette.text }}>₹{fund.nav.toFixed(2)}</p>
+                    <p className="text-xs sm:text-sm font-bold truncate" style={{ color: palette.text }}>₹{fund.nav.toFixed(2)}</p>
                   </div>
                   <div
-                    className="rounded-xl p-2.5 text-center"
+                    className="rounded-xl p-1.5 sm:p-2.5 text-center"
                     style={{ background: palette.light, border: `1px solid ${palette.border}` }}
                   >
                     <div className="flex items-center justify-center gap-1 mb-1">
-                      <CalendarDays className="h-3 w-3" style={{ color: palette.text }} />
-                      <span className="text-xs text-muted-foreground">Since</span>
+                      <CalendarDays className="h-3 w-3 shrink-0" style={{ color: palette.text }} />
+                      <span className="text-[10px] sm:text-xs text-muted-foreground">Since</span>
                     </div>
-                    <p className="text-xs font-bold" style={{ color: palette.text }}>
+                    <p className="text-[10px] sm:text-xs font-bold" style={{ color: palette.text }}>
                       {new Date(fund.purchaseDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })}
                     </p>
                   </div>
@@ -217,20 +217,20 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-1">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-1">
                   <Button
                     onClick={() => handleAddUnits(fund)}
-                    className="flex-1 h-8 text-xs"
+                    className="flex-1 min-w-[80px] h-8 text-xs"
                     variant="outline"
                     size="sm"
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1.5" />
-                    Add Units
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Add
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3"
+                    className="h-8 px-2.5 sm:px-3"
                     onClick={() => setEditFund(fund)}
                   >
                     <Edit className="h-3.5 w-3.5" />
@@ -238,7 +238,7 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="h-8 px-3"
+                    className="h-8 px-2.5 sm:px-3"
                     onClick={() => setDeleteFundId(fund.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -246,7 +246,7 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                    className="h-8 px-2 sm:px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
                     onClick={() => toggleExpand(fund.id)}
                   >
                     {isExpanded ? (
@@ -288,21 +288,14 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
                     <>
                       {/* Summary row */}
                       <div
-                        className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 rounded-xl px-3 py-2 text-xs font-semibold"
                         style={{ background: palette.light, border: `1px solid ${palette.border}` }}
                       >
                         <span style={{ color: palette.text }}>Total Invested</span>
-                        <span style={{ color: palette.text }}>
+                        <span className="truncate" style={{ color: palette.text }}>
                           ₹{totalInvested.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                           &nbsp;·&nbsp;{fund.units.toFixed(3)} units
                         </span>
-                      </div>
-
-                      {/* Table header */}
-                      <div className="grid grid-cols-4 gap-2 px-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground col-span-2">Date</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">Units</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">Amount</span>
                       </div>
 
                       {/* Transaction rows */}
@@ -310,30 +303,25 @@ export const MutualFundDetails = ({ funds, onRefresh, onUpdate, onDelete }: Mutu
                         {fundTxs.map((tx, txIdx) => (
                           <div
                             key={tx.id}
-                            className="grid grid-cols-4 gap-2 items-center rounded-xl px-3 py-2.5 bg-background/60 border border-border/40 hover:border-border/70 transition-colors"
+                            className="flex items-center gap-2 rounded-xl px-2 sm:px-3 py-2 bg-background/60 border border-border/40 hover:border-border/70 transition-colors"
                           >
-                            <div className="col-span-2 flex items-center gap-2">
-                              <div
-                                className="h-6 w-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{ background: palette.light }}
-                              >
-                                <ArrowDownRight className="h-3 w-3" style={{ color: palette.text }} />
-                              </div>
-                              <div>
-                                <p className="text-xs font-semibold text-foreground">
-                                  {new Date(tx.purchaseDate).toLocaleDateString("en-IN", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground">NAV ₹{tx.nav.toFixed(2)}</p>
-                              </div>
+                            <div
+                              className="h-6 w-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{ background: palette.light }}
+                            >
+                              <ArrowDownRight className="h-3 w-3" style={{ color: palette.text }} />
                             </div>
-                            <p className="text-xs font-bold text-right" style={{ color: palette.text }}>
-                              {tx.units.toFixed(3)}
-                            </p>
-                            <p className="text-xs font-bold text-right text-foreground">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-foreground truncate">
+                                {new Date(tx.purchaseDate).toLocaleDateString("en-IN", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">NAV ₹{tx.nav.toFixed(2)} · {tx.units.toFixed(3)} units</p>
+                            </div>
+                            <p className="text-xs font-bold text-right text-foreground whitespace-nowrap shrink-0">
                               ₹{(tx.units * tx.nav).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                             </p>
                           </div>

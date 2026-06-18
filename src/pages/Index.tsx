@@ -365,7 +365,7 @@ const Index = () => {
 
       {/* Asset Details Dialog */}
       <Dialog open={selectedAsset !== null} onOpenChange={() => setSelectedAsset(null)}>
-        <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-lg max-h-[80vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-xl">Asset Details</DialogTitle>
           </DialogHeader>
