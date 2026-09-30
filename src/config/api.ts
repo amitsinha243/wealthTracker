@@ -4,7 +4,7 @@
 // export const API_BASE_URL = 'http://localhost:8080/api';
 
 //Azure App Service
-export const API_BASE_URL = 'https://wealthtracker-backend-app.azurewebsites.net/api';
+export const API_BASE_URL = 'https://wealthtracker-backend-app-243.azurewebsites.net/api';
 
 // Helper to get auth token from localStorage
 export const getAuthToken = () => localStorage.getItem('authToken');
