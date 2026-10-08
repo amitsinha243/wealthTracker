@@ -10,6 +10,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useAssets } from "@/hooks/useAssets";
+import { useIncome } from "@/hooks/useIncome";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,8 @@ const Expenses = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { expenses, updateExpense, deleteExpense } = useExpenses();
-  const { savingsAccounts } = useAssets();
+  const { savingsAccounts, fetchAssets } = useAssets();
+  const { incomes } = useIncome();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -89,47 +91,107 @@ const Expenses = () => {
     return savingsAccounts.filter(acc => accountIds.includes(acc.id));
   }, [expenses, savingsAccounts]);
 
-  // Compute remaining balance after each expense per savings account
+  // Compute remaining balance after each expense per savings account,
+  // taking into account BOTH expenses and incomes chronologically.
   const balanceAfterExpense = useMemo(() => {
     const balanceMap = new Map<string, number>();
 
-    // Group all expenses by savings account
-    const expensesByAccount = new Map<string, Expense[]>();
-    for (const exp of expenses) {
-      if (!exp.savingsAccountId) continue;
-      const list = expensesByAccount.get(exp.savingsAccountId) || [];
-      list.push(exp);
-      expensesByAccount.set(exp.savingsAccountId, list);
-    }
+    const getDateString = (dateVal: string | Date | undefined): string => {
+      if (!dateVal) return "";
+      if (typeof dateVal === "string") return dateVal.split("T")[0];
+      return dateVal.toISOString().split("T")[0];
+    };
 
-    // For each account, sort expenses by date ascending, then walk from newest to oldest
-    for (const [accountId, accountExpenses] of expensesByAccount) {
-      const account = savingsAccounts.find(a => a.id === accountId);
-      if (!account) continue;
+    const getObjectIdTimestamp = (id?: string): number => {
+      if (id && /^[0-9a-fA-F]{24}$/.test(id)) {
+        return parseInt(id.substring(0, 8), 16) * 1000;
+      }
+      return 0;
+    };
 
-      // Sort ascending by date (oldest first), then by createdAt for same-day expenses
-      const sorted = [...accountExpenses].sort((a, b) => {
-        const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
-        if (dateDiff !== 0) return dateDiff;
-        // Same date: sort by createdAt timestamp (insertion order)
+    const roundCurrency = (val: number) => Math.round((val + Number.EPSILON) * 100) / 100;
+
+    for (const account of savingsAccounts) {
+      const accountExpenses = expenses.filter(e => e.savingsAccountId === account.id);
+      if (accountExpenses.length === 0) continue;
+
+      const accountIncomes = incomes.filter(i => i.savingsAccountId === account.id);
+
+      type AccountTx = {
+        id: string;
+        type: 'expense' | 'income';
+        amount: number;
+        date: string;
+        createdAt?: string;
+      };
+
+      const transactions: AccountTx[] = [
+        ...accountExpenses.map(e => ({
+          id: e.id,
+          type: 'expense' as const,
+          amount: e.amount,
+          date: e.date,
+          createdAt: e.createdAt,
+        })),
+        ...accountIncomes.map(i => ({
+          id: i.id,
+          type: 'income' as const,
+          amount: i.amount,
+          date: i.date,
+          createdAt: undefined,
+        })),
+      ];
+
+      // Sort ascending chronologically (oldest first)
+      transactions.sort((a, b) => {
+        const dateA = getDateString(a.date);
+        const dateB = getDateString(b.date);
+        if (dateA !== dateB) {
+          return dateA.localeCompare(dateB);
+        }
+
+        // On the same day: credits (incomes) come before debits (expenses)
+        if (a.type !== b.type) {
+          return a.type === 'income' ? -1 : 1;
+        }
+
+        // Same type on same day: sort by createdAt timestamp if available
         const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        if (aCreated !== bCreated) return aCreated - bCreated;
-        // Fallback: MongoDB ObjectIds are time-ordered
+        if (aCreated !== 0 && bCreated !== 0 && aCreated !== bCreated) {
+          return aCreated - bCreated;
+        }
+
+        // Fallback: MongoDB ObjectId timestamp
+        const tsA = getObjectIdTimestamp(a.id);
+        const tsB = getObjectIdTimestamp(b.id);
+        if (tsA !== 0 && tsB !== 0 && tsA !== tsB) {
+          return tsA - tsB;
+        }
+
         return a.id.localeCompare(b.id);
       });
 
-      // Walk from newest to oldest: most recent expense gets the current balance,
-      // each older expense gets balance + sum of all newer expenses
+      // Walk from newest to oldest:
+      // The most recent transaction leaves the account at account.balance.
+      // Moving backward in time:
+      // - Expense: the balance AFTER this expense was runningBalance.
+      //   Before this expense occurred, the account had (runningBalance + amount).
+      // - Income: before this income was added, the account had (runningBalance - amount).
       let runningBalance = account.balance;
-      for (let i = sorted.length - 1; i >= 0; i--) {
-        balanceMap.set(sorted[i].id, runningBalance);
-        runningBalance += sorted[i].amount;
+      for (let i = transactions.length - 1; i >= 0; i--) {
+        const tx = transactions[i];
+        if (tx.type === 'expense') {
+          balanceMap.set(tx.id, roundCurrency(runningBalance));
+          runningBalance = roundCurrency(runningBalance + tx.amount);
+        } else {
+          runningBalance = roundCurrency(runningBalance - tx.amount);
+        }
       }
     }
 
     return balanceMap;
-  }, [expenses, savingsAccounts]);
+  }, [expenses, incomes, savingsAccounts]);
 
   // Filter expenses based on selected filters
   const filteredExpenses = useMemo(() => {
@@ -233,12 +295,18 @@ const Expenses = () => {
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
-      deleteExpense(deleteId);
+      await deleteExpense(deleteId);
+      await fetchAssets();
       toast.success("Expense deleted successfully");
       setDeleteId(null);
     }
+  };
+
+  const handleUpdateExpense = async (id: string, updatedData: any) => {
+    await updateExpense(id, updatedData);
+    await fetchAssets();
   };
 
   const exportToCSV = () => {
@@ -560,7 +628,7 @@ const Expenses = () => {
         open={editExpense !== null}
         onOpenChange={(open) => !open && setEditExpense(null)}
         expense={editExpense}
-        onUpdate={updateExpense}
+        onUpdate={handleUpdateExpense}
       />
 
       {/* Delete Confirmation Dialog */}

@@ -20,7 +20,7 @@ const INCOME_SOURCES = [
 export const AddIncomeDialog = () => {
   const [open, setOpen] = useState(false);
   const { addIncome } = useIncome();
-  const { savingsAccounts } = useAssets();
+  const { savingsAccounts, fetchAssets } = useAssets();
   const [formData, setFormData] = useState({
     amount: '',
     date: new Date().toISOString().split('T')[0],
@@ -40,6 +40,10 @@ export const AddIncomeDialog = () => {
         description: formData.description,
         savingsAccountId: formData.savingsAccountId || undefined
       });
+
+      if (formData.savingsAccountId) {
+        await fetchAssets();
+      }
 
       toast.success("Income added successfully");
       setOpen(false);

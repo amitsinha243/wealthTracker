@@ -68,6 +68,26 @@ public class ExpenseController {
         if (!expense.getUserId().equals(userId)) {
             return ResponseEntity.status(403).build();
         }
+
+        // Revert old expense from previous savings account if linked
+        if (expense.getSavingsAccountId() != null && !expense.getSavingsAccountId().isEmpty()) {
+            SavingsAccount oldAccount = savingsAccountRepository.findById(expense.getSavingsAccountId()).orElse(null);
+            if (oldAccount != null && oldAccount.getUserId().equals(userId)) {
+                oldAccount.setBalance(oldAccount.getBalance() + expense.getAmount());
+                oldAccount.setUpdatedAt(LocalDate.now());
+                savingsAccountRepository.save(oldAccount);
+            }
+        }
+
+        // Deduct updated expense from new savings account if linked
+        if (expenseDetails.getSavingsAccountId() != null && !expenseDetails.getSavingsAccountId().isEmpty()) {
+            SavingsAccount newAccount = savingsAccountRepository.findById(expenseDetails.getSavingsAccountId()).orElse(null);
+            if (newAccount != null && newAccount.getUserId().equals(userId)) {
+                newAccount.setBalance(newAccount.getBalance() - expenseDetails.getAmount());
+                newAccount.setUpdatedAt(LocalDate.now());
+                savingsAccountRepository.save(newAccount);
+            }
+        }
         
         expense.setCategory(expenseDetails.getCategory());
         expense.setAmount(expenseDetails.getAmount());

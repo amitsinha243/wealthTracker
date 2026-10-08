@@ -52,6 +52,28 @@ public class IncomeController {
         Income existingIncome = incomeRepository.findById(id).orElse(null);
         
         if (existingIncome != null && existingIncome.getUserId().equals(userId)) {
+            // Revert old income from previous account
+            if (existingIncome.getSavingsAccountId() != null && !existingIncome.getSavingsAccountId().isEmpty()) {
+                savingsAccountRepository.findById(existingIncome.getSavingsAccountId()).ifPresent(acc -> {
+                    if (acc.getUserId().equals(userId)) {
+                        acc.setBalance(acc.getBalance() - existingIncome.getAmount());
+                        acc.setUpdatedAt(java.time.LocalDate.now());
+                        savingsAccountRepository.save(acc);
+                    }
+                });
+            }
+
+            // Apply new income to new account
+            if (income.getSavingsAccountId() != null && !income.getSavingsAccountId().isEmpty()) {
+                savingsAccountRepository.findById(income.getSavingsAccountId()).ifPresent(acc -> {
+                    if (acc.getUserId().equals(userId)) {
+                        acc.setBalance(acc.getBalance() + income.getAmount());
+                        acc.setUpdatedAt(java.time.LocalDate.now());
+                        savingsAccountRepository.save(acc);
+                    }
+                });
+            }
+
             income.setId(id);
             income.setUserId(userId);
             Income updatedIncome = incomeRepository.save(income);
@@ -67,6 +89,17 @@ public class IncomeController {
         Income income = incomeRepository.findById(id).orElse(null);
         
         if (income != null && income.getUserId().equals(userId)) {
+            // Revert balance if income was linked to savings account
+            if (income.getSavingsAccountId() != null && !income.getSavingsAccountId().isEmpty()) {
+                savingsAccountRepository.findById(income.getSavingsAccountId()).ifPresent(account -> {
+                    if (account.getUserId().equals(userId)) {
+                        account.setBalance(account.getBalance() - income.getAmount());
+                        account.setUpdatedAt(java.time.LocalDate.now());
+                        savingsAccountRepository.save(account);
+                    }
+                });
+            }
+
             incomeRepository.deleteById(id);
             return ResponseEntity.ok().build();
         }

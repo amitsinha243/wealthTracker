@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit2, Trash2, Filter } from "lucide-react";
 import { useIncome, Income } from "@/hooks/useIncome";
+import { useAssets } from "@/hooks/useAssets";
 import { EditIncomeDialog } from "@/components/EditIncomeDialog";
 import {
   Select,
@@ -27,6 +28,7 @@ import { toast } from "sonner";
 
 export const IncomeList = () => {
   const { incomes, deleteIncome } = useIncome();
+  const { fetchAssets } = useAssets();
   const [editIncome, setEditIncome] = useState<Income | null>(null);
   const [deleteIncomeId, setDeleteIncomeId] = useState<string | null>(null);
   const [monthFilter, setMonthFilter] = useState<string>("all");
@@ -61,6 +63,7 @@ export const IncomeList = () => {
     
     try {
       await deleteIncome(deleteIncomeId);
+      await fetchAssets();
       toast.success("Income deleted successfully");
       setDeleteIncomeId(null);
     } catch (error) {
